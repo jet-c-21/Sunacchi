@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#encoding=utf-8
+# encoding=utf-8
 
 try:
     # for Python2
@@ -29,7 +29,7 @@ CONST_APP_VERSION = "MaxBot (2024.04.23)"
 CONST_MAXBOT_LAUNCHER_FILE = "config_launcher.json"
 CONST_MAXBOT_CONFIG_FILE = "settings-templates/settings.json"
 
-translate={}
+translate = {}
 
 URL_DONATE = 'https://max-everyday.com/about/#donate'
 URL_HELP = 'https://max-everyday.com/2018/08/max-auto-reg-bot/'
@@ -38,6 +38,7 @@ URL_FB = 'https://www.facebook.com/maxbot.ticket'
 URL_CHROME_DRIVER = 'https://chromedriver.chromium.org/'
 URL_FIREFOX_DRIVER = 'https://github.com/mozilla/geckodriver/releases'
 URL_EDGE_DRIVER = 'https://developer.microsoft.com/zh-tw/microsoft-edge/tools/webdriver/'
+
 
 def load_translate():
     translate = {
@@ -119,8 +120,9 @@ def load_translate():
     }
     return translate
 
+
 def get_default_config():
-    config_dict={}
+    config_dict = {}
 
     config_dict["list"] = [CONST_MAXBOT_CONFIG_FILE]
 
@@ -128,6 +130,7 @@ def get_default_config():
     config_dict["advanced"]["language"] = "English"
 
     return config_dict
+
 
 def load_json():
     app_root = util.get_curr_process_work_root_dir()
@@ -140,6 +143,7 @@ def load_json():
     else:
         config_dict = get_default_config()
     return config_filepath, config_dict
+
 
 def btn_restore_defaults_clicked(language_code):
     app_root = util.get_curr_process_work_root_dir()
@@ -157,8 +161,10 @@ def btn_restore_defaults_clicked(language_code):
     global root
     load_GUI(root, config_dict)
 
+
 def btn_save_clicked():
     btn_save_act()
+
 
 def btn_save_act(slience_mode=True):
     app_root = util.get_curr_process_work_root_dir()
@@ -174,26 +180,32 @@ def btn_save_act(slience_mode=True):
     config_dict["list"] = filelist
 
     util.save_json(config_dict, config_filepath)
-    
+
     if not slience_mode:
         messagebox.showinfo(translate[language_code]["save"], translate[language_code]["done"])
 
     return True
 
+
 def open_url(url):
     webbrowser.open_new(url)
+
 
 def btn_exit_clicked():
     root.destroy()
 
+
 def btn_donate_clicked():
     open_url.open(URL_DONATE)
+
 
 def btn_help_clicked():
     open_url.open(URL_HELP)
 
+
 def callbackLanguageOnChange(event):
     applyNewLanguage()
+
 
 def get_language_code_by_name(new_language):
     language_code = "en_us"
@@ -205,12 +217,13 @@ def get_language_code_by_name(new_language):
         language_code = 'ja_jp'
     return language_code
 
+
 def applyNewLanguage():
     global combo_language
     new_language = combo_language.get().strip()
-    #print("new language value:", new_language)
+    # print("new language value:", new_language)
 
-    language_code=get_language_code_by_name(new_language)
+    language_code = get_language_code_by_name(new_language)
 
     global lbl_language
 
@@ -234,11 +247,11 @@ def applyNewLanguage():
 
     global btn_browse
     for i in range(15):
-        btn_browse[i].config(text=translate[language_code]['browse'] + " " + str(i+1))
+        btn_browse[i].config(text=translate[language_code]['browse'] + " " + str(i + 1))
 
     global btn_run
     for i in range(15):
-        btn_run[i].config(text=translate[language_code]['run'] + " " + str(i+1))
+        btn_run[i].config(text=translate[language_code]['run'] + " " + str(i + 1))
 
     global btn_save
     global btn_restore_defaults
@@ -246,30 +259,34 @@ def applyNewLanguage():
     btn_save.config(text=translate[language_code]["save"])
     btn_restore_defaults.config(text=translate[language_code]["restore_defaults"])
 
+
 def btn_items_browse_event(event):
     working_dir = os.path.dirname(os.path.realpath(__file__))
     btn_index = int(str(event.widget['text']).split(" ")[1])
 
     global widgets
     if "widgets" in globals():
-        file_path = filedialog.askopenfilename(initialdir=working_dir, defaultextension=".json",filetypes=[("json Documents","*.json"),("All Files","*.*")])
+        file_path = filedialog.askopenfilename(initialdir=working_dir, defaultextension=".json",
+                                               filetypes=[("json Documents", "*.json"), ("All Files", "*.*")])
         if not file_path is None:
             display_path = file_path
             if len(file_path) > len(working_dir):
-                if file_path[:len(working_dir)]==working_dir:
-                    display_path = file_path[len(working_dir)+1:]
-            #print("json file path:", file_path)
-            widgets['txt_file_name_value'][btn_index-1].set(display_path)
-            #print("new json file path:", txt_file_name[btn_index-1].get().strip())
+                if file_path[:len(working_dir)] == working_dir:
+                    display_path = file_path[len(working_dir) + 1:]
+            # print("json file path:", file_path)
+            widgets['txt_file_name_value'][btn_index - 1].set(display_path)
+            # print("new json file path:", txt_file_name[btn_index-1].get().strip())
+
 
 def btn_items_run_event(event):
     btn_index = int(str(event.widget['text']).split(" ")[1])
 
     global widgets
     if "widgets" in globals():
-        filename=widgets['txt_file_name_value'][btn_index-1].get().strip()
+        filename = widgets['txt_file_name_value'][btn_index - 1].get().strip()
         script_name = "chrome_tixcraft"
-        threading.Thread(target=util.launch_maxbot, args=(script_name,filename,)).start()
+        threading.Thread(target=util.launch_maxbot, args=(script_name, filename,)).start()
+
 
 def ConfigListTab(root, config_dict, language_code, UI_PADDING_X):
     frame_group_header = Frame(root)
@@ -282,18 +299,20 @@ def ConfigListTab(root, config_dict, language_code, UI_PADDING_X):
     }
 
     for i, filename in enumerate(config_dict["list"][:15]):
-        widgets['lbl_file_name'][i] = Label(frame_group_header, text=str(i+1))
+        widgets['lbl_file_name'][i] = Label(frame_group_header, text=str(i + 1))
         widgets['lbl_file_name'][i].grid(column=0, row=i, sticky=E)
 
         widgets['txt_file_name_value'][i] = StringVar(frame_group_header, value=filename)
-        widgets['txt_file_name'][i] = Entry(frame_group_header, width=20, textvariable=widgets['txt_file_name_value'][i])
+        widgets['txt_file_name'][i] = Entry(frame_group_header, width=20,
+                                            textvariable=widgets['txt_file_name_value'][i])
         widgets['txt_file_name'][i].grid(column=1, row=i, sticky=W)
 
-        widgets['btn_browse'][i] = ttk.Button(frame_group_header, text=translate[language_code]['browse'] + " " + str(i+1))
+        widgets['btn_browse'][i] = ttk.Button(frame_group_header,
+                                              text=translate[language_code]['browse'] + " " + str(i + 1))
         widgets['btn_browse'][i].grid(column=2, row=i, sticky=W)
         widgets['btn_browse'][i].bind('<Button-1>', btn_items_browse_event)
 
-        widgets['btn_run'][i] = ttk.Button(frame_group_header, text=translate[language_code]['run'] + " " + str(i+1))
+        widgets['btn_run'][i] = ttk.Button(frame_group_header, text=translate[language_code]['run'] + " " + str(i + 1))
         widgets['btn_run'][i].grid(column=3, row=i, sticky=W)
         widgets['btn_run'][i].bind('<Button-1>', btn_items_run_event)
 
@@ -314,81 +333,82 @@ def AboutTab(root, language_code):
     lbl_logo.image = logo_img
     lbl_logo.grid(column=0, row=group_row_count, columnspan=2)
 
-    group_row_count +=1
+    group_row_count += 1
 
     global lbl_slogan
     global lbl_help
     global lbl_donate
     global lbl_release
 
-    lbl_slogan = Label(frame_group_header, text=translate[language_code]['maxbot_slogan'], wraplength=400, justify="center")
+    lbl_slogan = Label(frame_group_header, text=translate[language_code]['maxbot_slogan'], wraplength=400,
+                       justify="center")
     lbl_slogan.grid(column=0, row=group_row_count, columnspan=2)
 
-    group_row_count +=1
+    group_row_count += 1
 
     lbl_help = Label(frame_group_header, text=translate[language_code]['help'])
-    lbl_help.grid(column=0, row=group_row_count, sticky = E)
+    lbl_help.grid(column=0, row=group_row_count, sticky=E)
 
     lbl_help_url = Label(frame_group_header, text=URL_HELP, fg="blue", cursor="hand2")
-    lbl_help_url.grid(column=1, row=group_row_count, sticky = W)
+    lbl_help_url.grid(column=1, row=group_row_count, sticky=W)
     lbl_help_url.bind("<Button-1>", lambda e: open_url(URL_HELP))
 
-    group_row_count +=1
+    group_row_count += 1
 
     lbl_donate = Label(frame_group_header, text=translate[language_code]['donate'])
-    lbl_donate.grid(column=0, row=group_row_count, sticky = E)
+    lbl_donate.grid(column=0, row=group_row_count, sticky=E)
 
     lbl_donate_url = Label(frame_group_header, text=URL_DONATE, fg="blue", cursor="hand2")
-    lbl_donate_url.grid(column=1, row=group_row_count, sticky = W)
+    lbl_donate_url.grid(column=1, row=group_row_count, sticky=W)
     lbl_donate_url.bind("<Button-1>", lambda e: open_url(URL_DONATE))
 
-    group_row_count +=1
+    group_row_count += 1
 
     lbl_release = Label(frame_group_header, text=translate[language_code]['release'])
-    lbl_release.grid(column=0, row=group_row_count, sticky = E)
+    lbl_release.grid(column=0, row=group_row_count, sticky=E)
 
     lbl_release_url = Label(frame_group_header, text=URL_RELEASE, fg="blue", cursor="hand2")
-    lbl_release_url.grid(column=1, row=group_row_count, sticky = W)
+    lbl_release_url.grid(column=1, row=group_row_count, sticky=W)
     lbl_release_url.bind("<Button-1>", lambda e: open_url(URL_RELEASE))
 
-    group_row_count +=1
+    group_row_count += 1
 
     lbl_fb_fans = Label(frame_group_header, text=u'Facebook')
-    lbl_fb_fans.grid(column=0, row=group_row_count, sticky = E)
+    lbl_fb_fans.grid(column=0, row=group_row_count, sticky=E)
 
     lbl_fb_fans_url = Label(frame_group_header, text=URL_FB, fg="blue", cursor="hand2")
-    lbl_fb_fans_url.grid(column=1, row=group_row_count, sticky = W)
+    lbl_fb_fans_url.grid(column=1, row=group_row_count, sticky=W)
     lbl_fb_fans_url.bind("<Button-1>", lambda e: open_url(URL_FB))
 
-
-    group_row_count +=1
+    group_row_count += 1
 
     lbl_chrome_driver = Label(frame_group_header, text=u'Chrome Driver')
-    lbl_chrome_driver.grid(column=0, row=group_row_count, sticky = E)
+    lbl_chrome_driver.grid(column=0, row=group_row_count, sticky=E)
 
     lbl_chrome_driver_url = Label(frame_group_header, text=URL_CHROME_DRIVER, fg="blue", cursor="hand2")
-    lbl_chrome_driver_url.grid(column=1, row=group_row_count, sticky = W)
+    lbl_chrome_driver_url.grid(column=1, row=group_row_count, sticky=W)
     lbl_chrome_driver_url.bind("<Button-1>", lambda e: open_url(URL_CHROME_DRIVER))
 
-    group_row_count +=1
+    group_row_count += 1
 
     lbl_firefox_driver = Label(frame_group_header, text=u'Firefox Driver')
-    lbl_firefox_driver.grid(column=0, row=group_row_count, sticky = E)
+    lbl_firefox_driver.grid(column=0, row=group_row_count, sticky=E)
 
     lbl_firefox_driver_url = Label(frame_group_header, text=URL_FIREFOX_DRIVER, fg="blue", cursor="hand2")
-    lbl_firefox_driver_url.grid(column=1, row=group_row_count, sticky = W)
+    lbl_firefox_driver_url.grid(column=1, row=group_row_count, sticky=W)
     lbl_firefox_driver_url.bind("<Button-1>", lambda e: open_url(URL_FIREFOX_DRIVER))
 
-    group_row_count +=1
+    group_row_count += 1
 
     lbl_edge_driver = Label(frame_group_header, text=u'Edge Driver')
-    lbl_edge_driver.grid(column=0, row=group_row_count, sticky = E)
+    lbl_edge_driver.grid(column=0, row=group_row_count, sticky=E)
 
     lbl_edge_driver_url = Label(frame_group_header, text=URL_EDGE_DRIVER, fg="blue", cursor="hand2")
-    lbl_edge_driver_url.grid(column=1, row=group_row_count, sticky = W)
+    lbl_edge_driver_url.grid(column=1, row=group_row_count, sticky=W)
     lbl_edge_driver_url.bind("<Button-1>", lambda e: open_url(URL_EDGE_DRIVER))
 
     frame_group_header.grid(column=0, row=row_count)
+
 
 def AdvancedTab(root, config_dict, language_code, UI_PADDING_X):
     row_count = 0
@@ -402,14 +422,14 @@ def AdvancedTab(root, config_dict, language_code, UI_PADDING_X):
 
     global lbl_language
     lbl_language = Label(frame_group_header, text=translate[language_code]['language'])
-    lbl_language.grid(column=0, row=group_row_count, sticky = E)
+    lbl_language.grid(column=0, row=group_row_count, sticky=E)
 
     global combo_language
     combo_language = ttk.Combobox(frame_group_header, state="readonly")
-    combo_language['values']= ("English","繁體中文","簡体中文","日本語")
+    combo_language['values'] = ("English", "繁體中文", "簡体中文", "日本語")
     combo_language.set(config_dict["advanced"]['language'])
     combo_language.bind("<<ComboboxSelected>>", callbackLanguageOnChange)
-    combo_language.grid(column=1, row=group_row_count, sticky = W)
+    combo_language.grid(column=1, row=group_row_count, sticky=W)
 
     frame_group_header.grid(column=0, row=row_count, padx=UI_PADDING_X)
 
@@ -420,23 +440,26 @@ def get_action_bar(root, language_code):
     global btn_save
     global btn_restore_defaults
 
-    btn_save = ttk.Button(frame_action, text=translate[language_code]['save'], command= lambda: btn_save_clicked() )
+    btn_save = ttk.Button(frame_action, text=translate[language_code]['save'], command=lambda: btn_save_clicked())
     btn_save.grid(column=1, row=0)
 
-    btn_restore_defaults = ttk.Button(frame_action, text=translate[language_code]['restore_defaults'], command= lambda: btn_restore_defaults_clicked(language_code))
+    btn_restore_defaults = ttk.Button(frame_action, text=translate[language_code]['restore_defaults'],
+                                      command=lambda: btn_restore_defaults_clicked(language_code))
     btn_restore_defaults.grid(column=2, row=0)
 
     return frame_action
 
+
 def clearFrame(frame):
     # destroy all widgets from frame
     for widget in frame.winfo_children():
-       widget.destroy()
+        widget.destroy()
+
 
 def load_GUI(root, config_dict):
     clearFrame(root)
 
-    #language_code="en_us"
+    # language_code="en_us"
     language_code = get_language_code_by_name(config_dict["advanced"]["language"])
 
     row_count = 0
@@ -454,7 +477,7 @@ def load_GUI(root, config_dict):
     tabControl.grid(column=0, row=row_count)
     tabControl.select(tab1)
 
-    row_count+=1
+    row_count += 1
 
     frame_action = get_action_bar(root, language_code)
     frame_action.grid(column=0, row=row_count)
@@ -464,6 +487,7 @@ def load_GUI(root, config_dict):
     AdvancedTab(tab2, config_dict, language_code, UI_PADDING_X)
     AboutTab(tab3, language_code)
     return widgets
+
 
 def main_gui():
     global translate
@@ -489,9 +513,9 @@ def main_gui():
     GUI_SIZE_HEIGHT = 580
 
     GUI_SIZE_MACOS = str(GUI_SIZE_WIDTH) + 'x' + str(GUI_SIZE_HEIGHT)
-    GUI_SIZE_WINDOWS=str(GUI_SIZE_WIDTH-60) + 'x' + str(GUI_SIZE_HEIGHT-55)
+    GUI_SIZE_WINDOWS = str(GUI_SIZE_WIDTH - 60) + 'x' + str(GUI_SIZE_HEIGHT - 55)
 
-    GUI_SIZE =GUI_SIZE_MACOS
+    GUI_SIZE = GUI_SIZE_MACOS
 
     if platform.system() == 'Windows':
         GUI_SIZE = GUI_SIZE_WINDOWS
@@ -518,6 +542,7 @@ def main_gui():
     os.remove(icon_filepath)
 
     root.mainloop()
+
 
 if __name__ == "__main__":
     main_gui()
