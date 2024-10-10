@@ -35,7 +35,7 @@ except Exception as exc:
 CONST_APP_VERSION = "MaxBot (2024.04.23)"
 
 CONST_MAXBOT_ANSWER_ONLINE_FILE = "MAXBOT_ONLINE_ANSWER.txt"
-CONST_MAXBOT_CONFIG_FILE = "settings.json"
+CONST_MAXBOT_CONFIG_FILE = "settings-templates/settings.json"
 CONST_MAXBOT_EXTENSION_NAME = "Maxbotplus_1.0.0"
 CONST_MAXBOT_INT28_FILE = "MAXBOT_INT28_IDLE.txt"
 CONST_MAXBOT_LAST_URL_FILE = "MAXBOT_LAST_URL.txt"
@@ -107,7 +107,7 @@ logger = logging.getLogger('logger')
 
 
 def get_config_dict(args):
-    app_root = util.get_app_root()
+    app_root = util.get_curr_process_work_root_dir()
     config_filepath = os.path.join(app_root, CONST_MAXBOT_CONFIG_FILE)
 
     # allow assign config by command line.
@@ -173,7 +173,7 @@ def read_last_url_from_file():
     return ret
 
 def play_sound_while_ordering(config_dict):
-    app_root = util.get_app_root()
+    app_root = util.get_curr_process_work_root_dir()
     captcha_sound_filename = os.path.join(app_root, config_dict["advanced"]["play_sound"]["filename"].strip())
     util.play_mp3_async(captcha_sound_filename)
 
@@ -1955,7 +1955,7 @@ def get_nodriver_browser_args():
     return browser_args
 
 def get_maxbot_extension_path(extension_folder):
-    app_root = util.get_app_root()
+    app_root = util.get_curr_process_work_root_dir()
     extension_path = "webdriver"
     extension_path = os.path.join(extension_path, extension_folder)
     config_filepath = os.path.join(app_root, extension_path)

@@ -37,7 +37,7 @@ except Exception as exc:
 CONST_APP_VERSION = "MaxBot (2024.04.23)"
 
 CONST_MAXBOT_ANSWER_ONLINE_FILE = "MAXBOT_ONLINE_ANSWER.txt"
-CONST_MAXBOT_CONFIG_FILE = "settings.json"
+CONST_MAXBOT_CONFIG_FILE = "settings-templates/settings.json"
 CONST_MAXBOT_EXTENSION_NAME = "Maxbotplus_1.0.0"
 CONST_MAXBOT_EXTENSION_STATUS_JSON = "status.json"
 CONST_MAXBOT_INT28_FILE = "MAXBOT_INT28_IDLE.txt"
@@ -705,7 +705,7 @@ def read_last_url_from_file():
     return ret
 
 def load_json():
-    app_root = util.get_app_root()
+    app_root = util.get_curr_process_work_root_dir()
 
     # overwrite config path.
     config_filepath = os.path.join(app_root, CONST_MAXBOT_CONFIG_FILE)
@@ -722,7 +722,7 @@ def load_json():
     return config_filepath, config_dict
 
 def btn_restore_defaults_clicked():
-    app_root = util.get_app_root()
+    app_root = util.get_curr_process_work_root_dir()
     config_filepath = os.path.join(app_root, CONST_MAXBOT_CONFIG_FILE)
     if os.path.exists(str(config_filepath)):
         try:
@@ -740,7 +740,7 @@ def btn_restore_defaults_clicked():
     load_GUI(root, config_dict)
 
 def do_maxbot_idle():
-    app_root = util.get_app_root()
+    app_root = util.get_curr_process_work_root_dir()
     idle_filepath = os.path.join(app_root, CONST_MAXBOT_INT28_FILE)
     try:
         with open(CONST_MAXBOT_INT28_FILE, "w") as text_file:
@@ -753,7 +753,7 @@ def btn_idle_clicked(language_code):
     update_maxbot_runtime_status()
 
 def do_maxbot_resume():
-    app_root = util.get_app_root()
+    app_root = util.get_curr_process_work_root_dir()
     idle_filepath = os.path.join(app_root, CONST_MAXBOT_INT28_FILE)
     for i in range(3):
          util.force_remove_file(idle_filepath)
@@ -773,7 +773,7 @@ def btn_save_clicked():
     btn_save_act()
 
 def btn_save_act(slience_mode=False):
-    app_root = util.get_app_root()
+    app_root = util.get_curr_process_work_root_dir()
     config_filepath = os.path.join(app_root, CONST_MAXBOT_CONFIG_FILE)
 
     config_dict = get_default_config()
@@ -1223,7 +1223,7 @@ def btn_preview_sound_clicked():
     global txt_play_sound_filename
     new_sound_filename = txt_play_sound_filename.get().strip()
     #print("new_sound_filename:", new_sound_filename)
-    app_root = util.get_app_root()
+    app_root = util.get_curr_process_work_root_dir()
     new_sound_filename = os.path.join(app_root, new_sound_filename)
     util.play_mp3_async(new_sound_filename)
 
@@ -2780,7 +2780,7 @@ def settgins_gui_timer():
             break
 
 def clean_extension_status():
-    Root_Dir = util.get_app_root()
+    Root_Dir = util.get_curr_process_work_root_dir()
     webdriver_path = os.path.join(Root_Dir, "webdriver")
     target_path = os.path.join(webdriver_path, CONST_MAXBOT_EXTENSION_NAME)
     target_path = os.path.join(target_path, "data")
@@ -2793,7 +2793,7 @@ def clean_extension_status():
             pass
 
 def sync_status_to_extension(status):
-    Root_Dir = util.get_app_root()
+    Root_Dir = util.get_curr_process_work_root_dir()
     webdriver_path = os.path.join(Root_Dir, "webdriver")
     target_path = os.path.join(webdriver_path, CONST_MAXBOT_EXTENSION_NAME)
     target_path = os.path.join(target_path, "data")

@@ -1,7 +1,7 @@
 {
     "homepage": "about:blank",
     "browser": "chrome",
-    "language": "\u7e41\u9ad4\u4e2d\u6587",
+    "language": "繁體中文",
     "ticket_number": 2,
     "refresh_datetime": "",
     "ocr_captcha": {
@@ -21,7 +21,7 @@
         "mode": "random",
         "area_keyword": ""
     },
-    "keyword_exclude": "\"\u8f2a\u6905\",\"\u8eab\u969c\",\"\u8eab\u5fc3 \u969c\u7919\",\"Restricted View\",\"\u71c8\u67f1\u906e\u853d\",\"\u8996\u7dda\u4e0d\u5b8c\u6574\"",
+    "keyword_exclude": "\"輪椅\",\"身障\",\"身心 障礙\",\"Restricted View\",\"燈柱遮蔽\",\"視線不完整\"",
     "kktix": {
         "auto_press_next_step_button": true,
         "auto_fill_ticket_number": true,

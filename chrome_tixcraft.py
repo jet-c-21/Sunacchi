@@ -47,7 +47,7 @@ except Exception as exc:
 CONST_APP_VERSION = "MaxBot (2024.04.23)"
 
 CONST_MAXBOT_ANSWER_ONLINE_FILE = "MAXBOT_ONLINE_ANSWER.txt"
-CONST_MAXBOT_CONFIG_FILE = "settings.json"
+CONST_MAXBOT_CONFIG_FILE = "settings-templates/settings.json"
 CONST_MAXBOT_EXTENSION_NAME = "Maxbotplus_1.0.0"
 CONST_MAXBOT_INT28_FILE = "MAXBOT_INT28_IDLE.txt"
 CONST_MAXBOT_LAST_URL_FILE = "MAXBOT_LAST_URL.txt"
@@ -138,7 +138,7 @@ logging.basicConfig()
 logger = logging.getLogger('logger')
 
 def get_config_dict(args):
-    app_root = util.get_app_root()
+    app_root = util.get_curr_process_work_root_dir()
     config_filepath = os.path.join(app_root, CONST_MAXBOT_CONFIG_FILE)
 
     # allow assign config by command line.
@@ -319,7 +319,7 @@ def load_chromdriver_normal(config_dict, driver_type):
 
     driver = None
 
-    Root_Dir = util.get_app_root()
+    Root_Dir = util.get_curr_process_work_root_dir()
     webdriver_path = os.path.join(Root_Dir, "webdriver")
     chromedriver_path = get_chromedriver_path(webdriver_path)
 
@@ -473,7 +473,7 @@ def load_chromdriver_uc(config_dict):
     if config_dict["advanced"]["verbose"]:
         show_debug_message = True
 
-    Root_Dir = util.get_app_root()
+    Root_Dir = util.get_curr_process_work_root_dir()
     webdriver_path = os.path.join(Root_Dir, "webdriver")
     chromedriver_path = get_chromedriver_path(webdriver_path)
 
@@ -619,7 +619,7 @@ def get_driver_by_config(config_dict):
     if homepage is None:
         homepage = ""
 
-    Root_Dir = util.get_app_root()
+    Root_Dir = util.get_curr_process_work_root_dir()
     webdriver_path = os.path.join(Root_Dir, "webdriver")
     #print("platform.system().lower():", platform.system().lower())
 
@@ -5645,7 +5645,7 @@ def hkticketing_login(driver, account, password):
     return ret
 
 def play_sound_while_ordering(config_dict):
-    app_root = util.get_app_root()
+    app_root = util.get_curr_process_work_root_dir()
     captcha_sound_filename = os.path.join(app_root, config_dict["advanced"]["play_sound"]["filename"].strip())
     util.play_mp3_async(captcha_sound_filename)
 

@@ -27,7 +27,7 @@ import util
 CONST_APP_VERSION = "MaxBot (2024.04.23)"
 
 CONST_MAXBOT_LAUNCHER_FILE = "config_launcher.json"
-CONST_MAXBOT_CONFIG_FILE = "settings.json"
+CONST_MAXBOT_CONFIG_FILE = "settings-templates/settings.json"
 
 translate={}
 
@@ -130,7 +130,7 @@ def get_default_config():
     return config_dict
 
 def load_json():
-    app_root = util.get_app_root()
+    app_root = util.get_curr_process_work_root_dir()
     config_filepath = os.path.join(app_root, CONST_MAXBOT_LAUNCHER_FILE)
 
     config_dict = None
@@ -142,7 +142,7 @@ def load_json():
     return config_filepath, config_dict
 
 def btn_restore_defaults_clicked(language_code):
-    app_root = util.get_app_root()
+    app_root = util.get_curr_process_work_root_dir()
     config_filepath = os.path.join(app_root, CONST_MAXBOT_LAUNCHER_FILE)
     if os.path.exists(str(config_filepath)):
         try:
@@ -161,7 +161,7 @@ def btn_save_clicked():
     btn_save_act()
 
 def btn_save_act(slience_mode=True):
-    app_root = util.get_app_root()
+    app_root = util.get_curr_process_work_root_dir()
     config_filepath = os.path.join(app_root, CONST_MAXBOT_LAUNCHER_FILE)
 
     config_dict = get_default_config()
