@@ -628,8 +628,8 @@ async def main_server():
         ("/question", QuestionHandler),
         ('/(.*)', StaticFileHandler, {"path": os.path.join(".", 'www/')}),
     ])
-    app.ocr = ocr;
-    app.version = CONST_APP_VERSION;
+    app.ocr = ocr
+    app.version = CONST_APP_VERSION
 
     app.listen(CONST_SERVER_PORT)
     print("server running on port:", CONST_SERVER_PORT)
@@ -652,7 +652,7 @@ def launch_web_server():
         asyncio.run(main_server())
 
     else:
-        msg = f"[*ERROR*] - port: {CONST_SERVER_PORT} on host: {host} is already in used"
+        msg = f"[*WARN*] - port: {CONST_SERVER_PORT} on host: {host} is already in used"
         raise RuntimeError(msg)
 
 
