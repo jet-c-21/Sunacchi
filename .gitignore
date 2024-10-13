@@ -11,7 +11,7 @@
 .vscode/
 .virtual_documents/
 .history/
-
+backup/
 
 ## Files
 kite_tutorial.ipynb

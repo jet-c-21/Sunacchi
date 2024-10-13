@@ -5,6 +5,7 @@ from PIL import Image
 from typing import Optional
 from requests.exceptions import RequestException
 
+
 class NonBrowser:
     def __init__(self, domain_name: str = "tixcraft.com") -> None:
         self.session = requests.Session()
@@ -22,7 +23,8 @@ class NonBrowser:
     def set_headers(self, header: str) -> None:
         self.session.headers = header
 
-    def set_domain(self, domain_name: str, captcha_url: str = "ticket/captcha", refresh_url: str = "ticket/captcha?refresh=1") -> None:
+    def set_domain(self, domain_name: str, captcha_url: str = "ticket/captcha",
+                   refresh_url: str = "ticket/captcha?refresh=1") -> None:
         self.url = f"https://{domain_name}/{captcha_url}"
         self.refresh_url = f"https://{domain_name}/{refresh_url}"
 

@@ -302,7 +302,7 @@ def encrypt_password(config_dict):
 
 
 def maxbot_idle():
-    app_root = util.get_curr_process_work_root_dir()
+    app_root = system_tool.get_curr_process_work_root_dir()
     idle_filepath = os.path.join(app_root, CONST_MAXBOT_INT28_FILE)
     try:
         with open(CONST_MAXBOT_INT28_FILE, "w") as text_file:
@@ -312,7 +312,7 @@ def maxbot_idle():
 
 
 def maxbot_resume():
-    app_root = util.get_curr_process_work_root_dir()
+    app_root = system_tool.get_curr_process_work_root_dir()
     idle_filepath = os.path.join(app_root, CONST_MAXBOT_INT28_FILE)
     for i in range(3):
         util.force_remove_file(idle_filepath)
@@ -347,40 +347,6 @@ def launch_maxbot():
     threading.Thread(target=util.launch_maxbot, args=(script_name, "", "", "", "", window_size,)).start()
 
 
-def change_maxbot_status_by_keyword():
-    config_filepath, config_dict = load_json()
-
-    system_clock_data = datetime.now()
-    current_time = system_clock_data.strftime('%H:%M:%S')
-    # print('Current Time is:', current_time)
-    # print("idle_keyword", config_dict["advanced"]["idle_keyword"])
-    if len(config_dict["advanced"]["idle_keyword"]) > 0:
-        is_matched = util.is_text_match_keyword(config_dict["advanced"]["idle_keyword"], current_time)
-        if is_matched:
-            # print("match to idle:", current_time)
-            maxbot_idle()
-
-    # print("resume_keyword", config_dict["advanced"]["resume_keyword"])
-    if len(config_dict["advanced"]["resume_keyword"]) > 0:
-        is_matched = util.is_text_match_keyword(config_dict["advanced"]["resume_keyword"], current_time)
-        if is_matched:
-            # print("match to resume:", current_time)
-            maxbot_resume()
-
-    current_time = system_clock_data.strftime('%S')
-    if len(config_dict["advanced"]["idle_keyword_second"]) > 0:
-        is_matched = util.is_text_match_keyword(config_dict["advanced"]["idle_keyword_second"], current_time)
-        if is_matched:
-            # print("match to idle:", current_time)
-            maxbot_idle()
-
-    if len(config_dict["advanced"]["resume_keyword_second"]) > 0:
-        is_matched = util.is_text_match_keyword(config_dict["advanced"]["resume_keyword_second"], current_time)
-        if is_matched:
-            # print("match to resume:", current_time)
-            maxbot_resume()
-
-
 def clean_extension_status():
     Root_Dir = system_tool.get_curr_process_work_root_dir()
     webdriver_path = os.path.join(Root_Dir, "webdriver")
@@ -396,7 +362,7 @@ def clean_extension_status():
 
 
 def sync_status_to_extension(status):
-    Root_Dir = util.get_curr_process_work_root_dir()
+    Root_Dir = system_tool.get_curr_process_work_root_dir()
     webdriver_path = os.path.join(Root_Dir, "webdriver")
     target_path = os.path.join(webdriver_path, CONST_MAXBOT_EXTENSION_NAME)
     target_path = os.path.join(target_path, "data")
@@ -414,11 +380,12 @@ def sync_status_to_extension(status):
 
 
 def clean_tmp_file():
-    remove_file_list = [CONST_MAXBOT_LAST_URL_FILE
-        , CONST_MAXBOT_INT28_FILE
-        , CONST_MAXBOT_ANSWER_ONLINE_FILE
-        , CONST_MAXBOT_QUESTION_FILE
-                        ]
+    remove_file_list = [
+        CONST_MAXBOT_LAST_URL_FILE,
+        CONST_MAXBOT_INT28_FILE,
+        CONST_MAXBOT_ANSWER_ONLINE_FILE,
+        CONST_MAXBOT_QUESTION_FILE
+    ]
     for filepath in remove_file_list:
         util.force_remove_file(filepath)
 
@@ -464,7 +431,7 @@ class ResumeHandler(tornado.web.RequestHandler):
 
 class RunHandler(tornado.web.RequestHandler):
     def get(self):
-        print('run button pressed.')
+        print('[*INFO*] - run button pressed.')
         launch_maxbot()
         self.write({"run": True})
 
@@ -663,6 +630,40 @@ def launch_web_server():
         raise RuntimeError(msg)
 
 
+def change_maxbot_status_by_keyword():
+    config_filepath, config_dict = load_json()
+
+    system_clock_data = datetime.now()
+    current_time = system_clock_data.strftime('%H:%M:%S')
+    # print('Current Time is:', current_time)
+    # print("idle_keyword", config_dict["advanced"]["idle_keyword"])
+    if len(config_dict["advanced"]["idle_keyword"]) > 0:
+        is_matched = util.is_text_match_keyword(config_dict["advanced"]["idle_keyword"], current_time)
+        if is_matched:
+            # print("match to idle:", current_time)
+            maxbot_idle()
+
+    # print("resume_keyword", config_dict["advanced"]["resume_keyword"])
+    if len(config_dict["advanced"]["resume_keyword"]) > 0:
+        is_matched = util.is_text_match_keyword(config_dict["advanced"]["resume_keyword"], current_time)
+        if is_matched:
+            # print("match to resume:", current_time)
+            maxbot_resume()
+
+    current_time = system_clock_data.strftime('%S')
+    if len(config_dict["advanced"]["idle_keyword_second"]) > 0:
+        is_matched = util.is_text_match_keyword(config_dict["advanced"]["idle_keyword_second"], current_time)
+        if is_matched:
+            # print("match to idle:", current_time)
+            maxbot_idle()
+
+    if len(config_dict["advanced"]["resume_keyword_second"]) > 0:
+        is_matched = util.is_text_match_keyword(config_dict["advanced"]["resume_keyword_second"], current_time)
+        if is_matched:
+            # print("match to resume:", current_time)
+            maxbot_resume()
+
+
 def settings_gui_timer():
     while True:
         change_maxbot_status_by_keyword()
@@ -675,8 +676,9 @@ if __name__ == "__main__":
     global GLOBAL_SERVER_SHUTDOWN
     GLOBAL_SERVER_SHUTDOWN = False
 
-    threading.Thread(target=settings_gui_timer, daemon=True).start()
-    threading.Thread(target=launch_web_server, daemon=True).start()
+    start_thread_in_daemon = True
+    threading.Thread(target=settings_gui_timer, daemon=start_thread_in_daemon).start()
+    threading.Thread(target=launch_web_server, daemon=start_thread_in_daemon).start()
 
     clean_tmp_file()
     clean_extension_status()

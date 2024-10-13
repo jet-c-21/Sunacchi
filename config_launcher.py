@@ -27,7 +27,7 @@ import util
 CONST_APP_VERSION = "MaxBot (2024.04.23)"
 
 CONST_MAXBOT_LAUNCHER_FILE = "config_launcher.json"
-CONST_MAXBOT_CONFIG_FILE = "settings-templates/settings.json"
+CONST_MAXBOT_CONFIG_FILE = "settings.json"
 
 translate = {}
 

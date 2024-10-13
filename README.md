@@ -1,5 +1,11 @@
 # Max 蛋黃酥上車機器人
 
+## Demo 示範影片
+
+- [點此查看示範影片](demo_video.md)
+- [youtube channel]()
+
+
 ## 總覽
 
 MaxBot 是一個開放原始碼的蛋黃酥/公車訂位機器人。祝您搶購成功。
@@ -63,9 +69,6 @@ https://github.com/max32002/tixcraft_bot/releases
 
 
 
-## Demo 示範影片
-
-[點此查看示範影片](https://github.com/max32002/tixcraft_bot/blob/master/demo_video.md)
 
 ## How to Use 如何使用
 
