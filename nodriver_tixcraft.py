@@ -1992,7 +1992,7 @@ def get_maxbot_extension_path(extension_folder):
     config_filepath = os.path.join(app_root, extension_path)
     # print("config_filepath:", config_filepath)
 
-    # double check extesion mainfest
+    # double check extension manifest
     path = pathlib.Path(config_filepath)
     if path.exists():
         if path.is_dir():
@@ -2000,17 +2000,23 @@ def get_maxbot_extension_path(extension_folder):
             for item in path.rglob("manifest.*"):
                 path = item.parent
             # print("final path:", path)
+
     return config_filepath
 
 
 def get_extension_config(config_dict):
     default_lang = "zh-TW"
-    no_sandbox = True
     browser_args = get_nodriver_browser_args()
     if len(config_dict["advanced"]["proxy_server_port"]) > 2:
         browser_args.append('--proxy-server=%s' % config_dict["advanced"]["proxy_server_port"])
-    conf = Config(browser_args=browser_args, lang=default_lang, no_sandbox=no_sandbox,
-                  headless=config_dict["advanced"]["headless"])
+
+    sandbox = False
+    conf = Config(
+        browser_args=browser_args,
+        lang=default_lang,
+        sandbox=sandbox,
+        headless=config_dict["advanced"]["headless"]
+    )
     if config_dict["advanced"]["chrome_extension"]:
         ext = get_maxbot_extension_path(CONST_MAXBOT_EXTENSION_NAME)
         if len(ext) > 0:

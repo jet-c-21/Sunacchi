@@ -21,6 +21,6 @@ from sunacchi.utils.file_tool import (
 if __name__ == '__main__':
     find_all_files_with_ext(PROJECT_DIR, '.json')
 
-    find_all_files_with_ext(PROJECT_DIR, '.txt')
+    # find_all_files_with_ext(PROJECT_DIR, '.txt')
 
-    find_all_files_with_ext(PROJECT_DIR, '.crx')
+    # find_all_files_with_ext(PROJECT_DIR, '.crx')
