@@ -5,10 +5,42 @@ GitHub: https://github.com/jet-c-21
 Create Date: 10/10/24
 """
 from typing import Union, Dict, List
+from argparse import Namespace
 import json
 import os
 import pathlib
 import shutil
+
+
+def create_dir(dir_path: Union[pathlib.Path, str],
+               parents=True,
+               exist_ok=True) -> pathlib.Path:
+    dir_path = pathlib.Path(dir_path)
+    if not dir_path.is_dir():
+        dir_path.mkdir(parents=parents, exist_ok=exist_ok, mode=0o777)
+        dir_path.chmod(0o777)
+
+    return dir_path
+
+
+def to_json(data: Union[Dict, Namespace, List],
+            fp: Union[str, pathlib.Path]) -> pathlib.Path:
+    fp = pathlib.Path(fp)
+    if not fp.parent.is_dir():
+        fp.parent.mkdir(parents=True, exist_ok=True)
+
+    if isinstance(data, Namespace):
+        data = vars(data)
+
+    json.dump(
+        data,
+        open(fp, 'w', encoding='utf-8'),
+        indent=4,
+        ensure_ascii=False
+    )
+    fp.chmod(0o777)
+
+    return fp
 
 
 def read_json(fp: Union[pathlib.Path, str]) -> Union[Dict, List]:
