@@ -18,6 +18,10 @@ kite_tutorial.ipynb
 *.json
 *.txt
 
+### Chrome extension file
+*.crx
+
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

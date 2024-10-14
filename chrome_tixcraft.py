@@ -4,6 +4,8 @@
 # import jieba
 # from DrissionPage import ChromiumPage
 # import nodriver as uc
+from typing import List
+import pathlib
 import argparse
 import base64
 import json
@@ -44,9 +46,23 @@ except Exception as exc:
     print(exc)
     pass
 
+from sunacchi.browser_ext.maxbot_plus import (
+    dump_settings_to_maxbot_plus_extension
+)
+
 from sunacchi.utils import (
+    file_tool,
     system_tool
 )
+
+
+THIS_FILE_PATH = pathlib.Path(__file__).absolute()
+THIS_FILE_PARENT_DIR = THIS_FILE_PATH.parent
+PROJECT_DIR = THIS_FILE_PARENT_DIR
+
+SETTINGS_TEMPLATES_DIR = PROJECT_DIR / 'settings-templates'
+BROWSER_EXT_SETTINGS_TEMPLATES_DIR = SETTINGS_TEMPLATES_DIR / 'browser_extensions'
+WEBDRIVER_DIR = PROJECT_DIR / 'webdriver'
 
 CONST_APP_VERSION = "MaxBot (2024.04.23)"
 
@@ -56,6 +72,14 @@ CONST_MAXBOT_EXTENSION_NAME = "Maxbotplus_1.0.0"
 CONST_MAXBOT_INT28_FILE = "MAXBOT_INT28_IDLE.txt"
 CONST_MAXBOT_LAST_URL_FILE = "MAXBOT_LAST_URL.txt"
 CONST_MAXBOT_QUESTION_FILE = "MAXBOT_QUESTION.txt"
+MAXBOT_EXTENSION_DIR = WEBDRIVER_DIR / CONST_MAXBOT_EXTENSION_NAME
+MAXBOT_EXTENSION_DATA_DIR = MAXBOT_EXTENSION_DIR / 'data'
+MAXBOT_EXTENSION_SETTINGS_FILE = MAXBOT_EXTENSION_DATA_DIR / 'settings.json'
+MAXBOT_EXTENSION_SETTINGS_TPL_DIR = BROWSER_EXT_SETTINGS_TEMPLATES_DIR / CONST_MAXBOT_EXTENSION_NAME
+MAXBOT_EXTENSION_SETTINGS_TPL_FILE = MAXBOT_EXTENSION_SETTINGS_TPL_DIR / 'settings.json'
+
+
+
 CONST_MAXBLOCK_EXTENSION_NAME = "Maxblockplus_1.0.0"
 CONST_MAXBLOCK_EXTENSION_FILTER = [
     "*.doubleclick.net/*",
@@ -219,9 +243,9 @@ def read_last_url_from_file():
     return ret
 
 
-def get_favoriate_extension_path(webdriver_path, config_dict):
+def get_favorite_extension_path(webdriver_path, config_dict) -> List[str]:
     # print("webdriver_path:", webdriver_path)
-    extension_list = []
+    extension_list = list()
     extension_list.append(os.path.join(webdriver_path, CONST_MAXBOT_EXTENSION_NAME + ".crx"))
     extension_list.append(os.path.join(webdriver_path, CONST_MAXBLOCK_EXTENSION_NAME + ".crx"))
     return extension_list
@@ -255,7 +279,7 @@ def get_chrome_options(webdriver_path, config_dict):
     # PS: this is crx version.
     extension_list = []
     if config_dict["advanced"]["chrome_extension"]:
-        extension_list = get_favoriate_extension_path(webdriver_path, config_dict)
+        extension_list = get_favorite_extension_path(webdriver_path, config_dict)
     for ext in extension_list:
         if os.path.exists(ext):
             chrome_options.add_extension(ext)
@@ -405,13 +429,14 @@ def get_uc_options(uc, config_dict, webdriver_path):
     load_extension_path = ""
     extension_list = []
     if config_dict["advanced"]["chrome_extension"]:
-        extension_list = get_favoriate_extension_path(webdriver_path, config_dict)
+        extension_list = get_favorite_extension_path(webdriver_path, config_dict)
     for ext in extension_list:
         ext = ext.replace('.crx', '')
         if os.path.exists(ext):
             # sync config.
             if CONST_MAXBOT_EXTENSION_NAME in ext:
-                util.dump_settings_to_maxbot_plus_extension(ext, config_dict, CONST_MAXBOT_CONFIG_FILE_NAME)
+                dump_settings_to_maxbot_plus_extension(ext, config_dict, CONST_MAXBOT_CONFIG_FILE_NAME)
+
             if CONST_MAXBLOCK_EXTENSION_NAME in ext:
                 util.dump_settings_to_maxblock_plus_extension(ext, config_dict, CONST_MAXBOT_CONFIG_FILE_NAME,
                                                               CONST_MAXBLOCK_EXTENSION_FILTER)
@@ -11095,6 +11120,10 @@ def check_refresh_datetime_occur(driver, target_time):
 
 
 def main(args):
+    """
+    args = parser.parse_args() # passed-in
+
+    """
     config_dict = get_config_dict(args)
 
     driver = None
