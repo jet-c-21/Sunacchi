@@ -8,6 +8,10 @@ from typing import Union, Dict
 import json
 import os
 import pathlib
+from sunacchi.utils.file_tool import (
+    read_json,
+    to_json
+)
 
 
 def dump_settings_to_maxbot_plus_extension(ext_dir: Union[str, pathlib.Path],
@@ -29,8 +33,7 @@ def dump_settings_to_maxbot_plus_extension(ext_dir: Union[str, pathlib.Path],
 
     # overwrite file
     try:
-        with open(target_path, 'w') as outfile:
-            json.dump(config_dict, outfile)
+        to_json(config_dict, target_path)
     except Exception as e:
         pass
 
@@ -41,8 +44,7 @@ def dump_settings_to_maxbot_plus_extension(ext_dir: Union[str, pathlib.Path],
     manifest_dict = None
     if os.path.isfile(target_path):
         try:
-            with open(target_path) as json_data:
-                manifest_dict = json.load(json_data)
+            manifest_dict = read_json(target_path)
         except Exception as e:
             pass
 
@@ -67,9 +69,7 @@ def dump_settings_to_maxbot_plus_extension(ext_dir: Union[str, pathlib.Path],
                     is_manifest_changed = True
 
         if is_manifest_changed:
-            json_str = json.dumps(manifest_dict, indent=4)
             try:
-                with open(target_path, 'w') as outfile:
-                    outfile.write(json_str)
+                to_json(manifest_dict, target_path)
             except Exception as e:
                 pass

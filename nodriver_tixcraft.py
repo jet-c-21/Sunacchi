@@ -25,15 +25,26 @@ import urllib.parse
 
 import util
 from NonBrowser import NonBrowser
-from sunacchi.utils import (
-    system_tool
-)
 
 try:
     import ddddocr
 except Exception as exc:
     print(exc)
     pass
+
+from sunacchi import var as VAR
+
+from sunacchi.utils import (
+    system_tool
+)
+
+from sunacchi.browser_ext.maxbot_plus import (
+    dump_settings_to_maxbot_plus_extension
+)
+
+from sunacchi.browser_ext.maxblock_plus import (
+    dump_settings_to_maxblock_plus_extension
+)
 
 CONST_APP_VERSION = "MaxBot (2024.04.23)"
 
@@ -44,41 +55,6 @@ CONST_MAXBOT_INT28_FILE = "MAXBOT_INT28_IDLE.txt"
 CONST_MAXBOT_LAST_URL_FILE = "MAXBOT_LAST_URL.txt"
 CONST_MAXBOT_QUESTION_FILE = "MAXBOT_QUESTION.txt"
 CONST_MAXBLOCK_EXTENSION_NAME = "Maxblockplus_1.0.0"
-CONST_MAXBLOCK_EXTENSION_FILTER = [
-    "*.doubleclick.net/*",
-    "*.googlesyndication.com/*",
-    "*.ssp.hinet.net/*",
-    "*a.amnet.tw/*",
-    "*anymind360.com/*",
-    "*adx.c.appier.net/*",
-    "*cdn.cookielaw.org/*",
-    "*cdnjs.cloudflare.com/ajax/libs/clipboard.js/*",
-    "*clarity.ms/*",
-    "*cloudfront.com/*",
-    "*cms.analytics.yahoo.com/*",
-    "*e2elog.fetnet.net/*",
-    "*fundingchoicesmessages.google.com/*",
-    "*ghtinc.com/*",
-    "*google-analytics.com/*",
-    "*googletagmanager.com/*",
-    "*googletagservices.com/*",
-    "*img.uniicreative.com/*",
-    "*lndata.com/*",
-    "*match.adsrvr.org/*",
-    "*onead.onevision.com.tw/*",
-    "*play.google.com/log?*",
-    "*popin.cc/*",
-    "*rollbar.com/*",
-    "*sb.scorecardresearch.com/*",
-    "*tagtoo.co/*",
-    "*ticketmaster.sg/js/adblock*",
-    "*ticketmaster.sg/js/adblock.js*",
-    "*tixcraft.com/js/analytics.js*",
-    "*tixcraft.com/js/common.js*",
-    "*tixcraft.com/js/custom.js*",
-    "*treasuredata.com/*",
-    "*www.youtube.com/youtubei/v1/player/heartbeat*",
-]
 
 CONST_CITYLINE_SIGN_IN_URL = "https://www.cityline.com/Login.html?targetUrl=https%3A%2F%2Fwww.cityline.com%2FEvents.html"
 CONST_FAMI_SIGN_IN_URL = "https://www.famiticket.com.tw/Home/User/SignIn"
@@ -2039,12 +2015,19 @@ def get_extension_config(config_dict):
         ext = get_maxbot_extension_path(CONST_MAXBOT_EXTENSION_NAME)
         if len(ext) > 0:
             conf.add_extension(ext)
-            util.dump_settings_to_maxbot_plus_extension(ext, config_dict, CONST_MAXBOT_CONFIG_FILE_NAME)
+            dump_settings_to_maxbot_plus_extension(ext, config_dict, CONST_MAXBOT_CONFIG_FILE_NAME)
+
         ext = get_maxbot_extension_path(CONST_MAXBLOCK_EXTENSION_NAME)
+
         if len(ext) > 0:
             conf.add_extension(ext)
-            util.dump_settings_to_maxblock_plus_extension(ext, config_dict, CONST_MAXBOT_CONFIG_FILE_NAME,
-                                                          CONST_MAXBLOCK_EXTENSION_FILTER)
+            dump_settings_to_maxblock_plus_extension(
+                ext,
+                config_dict,
+                CONST_MAXBOT_CONFIG_FILE_NAME,
+                VAR.BROWSER_EXT.MAXBLOCK_PLUS.BLOCK_DOMAIN_LS
+            )
+
     return conf
 
 

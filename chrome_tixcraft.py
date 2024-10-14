@@ -49,12 +49,15 @@ except Exception as exc:
 from sunacchi.browser_ext.maxbot_plus import (
     dump_settings_to_maxbot_plus_extension
 )
+from sunacchi.browser_ext.maxblock_plus import (
+    dump_settings_to_maxblock_plus_extension
+)
 
+from sunacchi import var as VAR
 from sunacchi.utils import (
     file_tool,
     system_tool
 )
-
 
 THIS_FILE_PATH = pathlib.Path(__file__).absolute()
 THIS_FILE_PARENT_DIR = THIS_FILE_PATH.parent
@@ -78,43 +81,7 @@ MAXBOT_EXTENSION_SETTINGS_FILE = MAXBOT_EXTENSION_DATA_DIR / 'settings.json'
 MAXBOT_EXTENSION_SETTINGS_TPL_DIR = BROWSER_EXT_SETTINGS_TEMPLATES_DIR / CONST_MAXBOT_EXTENSION_NAME
 MAXBOT_EXTENSION_SETTINGS_TPL_FILE = MAXBOT_EXTENSION_SETTINGS_TPL_DIR / 'settings.json'
 
-
-
 CONST_MAXBLOCK_EXTENSION_NAME = "Maxblockplus_1.0.0"
-CONST_MAXBLOCK_EXTENSION_FILTER = [
-    "*.doubleclick.net/*",
-    "*.googlesyndication.com/*",
-    "*.ssp.hinet.net/*",
-    "*a.amnet.tw/*",
-    "*adx.c.appier.net/*",
-    "*cdn.cookielaw.org/*",
-    "*cdnjs.cloudflare.com/ajax/libs/clipboard.js/*",
-    "*clarity.ms/*",
-    "*cloudfront.com/*",
-    "*cms.analytics.yahoo.com/*",
-    "*e2elog.fetnet.net/*",
-    "*fundingchoicesmessages.google.com/*",
-    "*ghtinc.com/*",
-    "*google-analytics.com/*",
-    "*googletagmanager.com/*",
-    "*googletagservices.com/*",
-    "*img.uniicreative.com/*",
-    "*lndata.com/*",
-    "*match.adsrvr.org/*",
-    "*onead.onevision.com.tw/*",
-    "*play.google.com/log?*",
-    "*popin.cc/*",
-    "*rollbar.com/*",
-    "*sb.scorecardresearch.com/*",
-    "*tagtoo.co/*",
-    "*ticketmaster.sg/js/adblock*",
-    "*ticketmaster.sg/js/adblock.js*",
-    "*tixcraft.com/js/analytics.js*",
-    "*tixcraft.com/js/common.js*",
-    "*tixcraft.com/js/custom.js*",
-    "*treasuredata.com/*",
-    "*www.youtube.com/youtubei/v1/player/heartbeat*",
-]
 
 CONST_CHROME_VERSION_NOT_MATCH_EN = "Please download the WebDriver version to match your browser version."
 CONST_CHROME_VERSION_NOT_MATCH_TW = "請下載與您瀏覽器相同版本的WebDriver版本，或更新您的瀏覽器版本。"
@@ -438,8 +405,13 @@ def get_uc_options(uc, config_dict, webdriver_path):
                 dump_settings_to_maxbot_plus_extension(ext, config_dict, CONST_MAXBOT_CONFIG_FILE_NAME)
 
             if CONST_MAXBLOCK_EXTENSION_NAME in ext:
-                util.dump_settings_to_maxblock_plus_extension(ext, config_dict, CONST_MAXBOT_CONFIG_FILE_NAME,
-                                                              CONST_MAXBLOCK_EXTENSION_FILTER)
+                dump_settings_to_maxblock_plus_extension(
+                    ext,
+                    config_dict,
+                    CONST_MAXBOT_CONFIG_FILE_NAME,
+                    VAR.BROWSER_EXT.MAXBLOCK_PLUS.BLOCK_DOMAIN_LS
+                )
+
             load_extension_path += ("," + os.path.abspath(ext))
             # print("load_extension_path:", load_extension_path)
 

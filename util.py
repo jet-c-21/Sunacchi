@@ -451,29 +451,7 @@ def get_brave_bin_path():
 
 
 
-def dump_settings_to_maxblock_plus_extension(ext, config_dict, CONST_MAXBOT_CONFIG_FILE,
-                                             CONST_MAXBLOCK_EXTENSION_FILTER):
-    # sync config.
-    target_path = ext
-    target_path = os.path.join(target_path, "data")
-    # special case, due to data folder is empty, sometime will be removed.
-    if not os.path.exists(target_path):
-        os.mkdir(target_path)
-    target_path = os.path.join(target_path, CONST_MAXBOT_CONFIG_FILE)
-    # print("save as to:", target_path)
-    if os.path.isfile(target_path):
-        try:
-            # print("remove file:", target_path)
-            os.unlink(target_path)
-        except Exception as exc:
-            pass
 
-    try:
-        with open(target_path, 'w') as outfile:
-            config_dict["domain_filter"] = CONST_MAXBLOCK_EXTENSION_FILTER
-            json.dump(config_dict, outfile)
-    except Exception as e:
-        pass
 
 
 # convert web string to reg pattern
