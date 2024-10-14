@@ -24,7 +24,7 @@ def dump_settings_to_maxbot_plus_extension(ext_dir: Union[str, pathlib.Path],
         try:
             # print("remove file:", target_path)
             os.unlink(target_path)
-        except Exception as exc:
+        except Exception as e:
             pass
 
     # overwrite file
@@ -54,7 +54,7 @@ def dump_settings_to_maxbot_plus_extension(ext_dir: Union[str, pathlib.Path],
             for remote_url in temp_remote_url_array:
                 remote_url_final = remote_url + "*"
                 local_remote_url_array.append(remote_url_final)
-        except Exception as exc:
+        except Exception as e:
             pass
 
     if len(local_remote_url_array) > 0:
