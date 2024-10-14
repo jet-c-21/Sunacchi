@@ -72,3 +72,27 @@ def create_file_from_template(target_file_path: Union[pathlib.Path, str],
     target_file_path.chmod(0o777)
 
     return target_file_path
+
+
+def find_all_files_with_ext(root_dir: pathlib.Path, file_ext: str) -> List[pathlib.Path]:
+    """
+    Finds all files with the specified extension in the given root directory and its subdirectories.
+
+    :param root_dir: The root directory to search for files.
+    :param file_ext: The file extension to search for (e.g., '.txt').
+    :return: A list of Paths representing all files found with the specified extension.
+    """
+    matched_f_ls = list(root_dir.rglob(f'*{file_ext}'))
+
+    if matched_f_ls:
+        msg = f"[*INFO*] - found {len(matched_f_ls)} {file_ext} files in {root_dir}:"
+        print(msg)
+        for f in matched_f_ls:
+            print(f)
+        print()
+
+    else:
+        msg = f"[*INFO*] - None of {file_ext} file found in {root_dir}"
+        print(msg)
+
+    return matched_f_ls

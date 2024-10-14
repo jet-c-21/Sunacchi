@@ -14,6 +14,8 @@ except ImportError:
     except Exception as e:
         pass
 
+from typing import Dict
+import pathlib
 import base64
 import json
 import os
@@ -24,12 +26,30 @@ import webbrowser
 
 import util
 
+from sunacchi.utils import (
+    system_tool
+)
+
+from sunacchi.utils.file_tool import (
+    to_json,
+    read_json,
+    create_file_from_template
+)
+
+THIS_FILE_PATH = pathlib.Path(__file__).absolute()
+THIS_FILE_PARENT_DIR = THIS_FILE_PATH.parent
+PROJECT_DIR = THIS_FILE_PARENT_DIR
+
+SETTINGS_TEMPLATES_DIR = PROJECT_DIR / 'settings-templates'
+
 CONST_APP_VERSION = "MaxBot (2024.04.23)"
 
-CONST_MAXBOT_LAUNCHER_FILE = "config_launcher.json"
+CONST_MAXBOT_LAUNCHER_SETTINGS_FILE_NAME = "config_launcher.json"
+CONST_MAXBOT_LAUNCHER_TPL_SETTINGS_FILE = SETTINGS_TEMPLATES_DIR / CONST_MAXBOT_LAUNCHER_SETTINGS_FILE_NAME
+
 CONST_MAXBOT_CONFIG_FILE = "settings.json"
 
-translate = {}
+translate = dict()
 
 URL_DONATE = 'https://max-everyday.com/about/#donate'
 URL_HELP = 'https://max-everyday.com/2018/08/max-auto-reg-bot/'
@@ -40,8 +60,8 @@ URL_FIREFOX_DRIVER = 'https://github.com/mozilla/geckodriver/releases'
 URL_EDGE_DRIVER = 'https://developer.microsoft.com/zh-tw/microsoft-edge/tools/webdriver/'
 
 
-def load_translate():
-    translate = {
+def load_translate() -> Dict:
+    translate_dict = {
         'en_us': {
             "language": 'Language',
             "enable": 'Enable',
@@ -60,6 +80,7 @@ def load_translate():
             "help": 'Help',
             "release": 'Release'
         },
+
         'zh_tw': {
             "language": '語言',
             "enable": '啟用',
@@ -79,6 +100,7 @@ def load_translate():
             "release": '所有可用版本',
             "help": '使用教學'
         },
+
         'zh_cn': {
             "language": '语言',
             "enable": '启用',
@@ -98,6 +120,7 @@ def load_translate():
             "help": '使用教学',
             "release": '所有可用版本'
         },
+
         'ja_jp': {
             "language": '言語',
             "enable": '有効',
@@ -118,48 +141,51 @@ def load_translate():
             "release": 'リリース'
         }
     }
-    return translate
+    return translate_dict
 
 
-def get_default_config():
-    config_dict = {}
+def get_default_config() -> Dict:
+    _config_dict = dict()
 
-    config_dict["list"] = [CONST_MAXBOT_CONFIG_FILE]
+    _config_dict["list"] = [CONST_MAXBOT_CONFIG_FILE]
 
-    config_dict["advanced"] = {}
-    config_dict["advanced"]["language"] = "English"
+    _config_dict["advanced"] = {}
+    _config_dict["advanced"]["language"] = "English"
 
-    return config_dict
+    return _config_dict
 
 
 def load_json():
-    app_root = util.get_curr_process_work_root_dir()
-    config_filepath = os.path.join(app_root, CONST_MAXBOT_LAUNCHER_FILE)
+    app_root = system_tool.get_curr_process_work_root_dir()
+    config_file_path = app_root / CONST_MAXBOT_LAUNCHER_SETTINGS_FILE_NAME
+    if not config_file_path.is_file():
+        create_file_from_template(config_file_path, CONST_MAXBOT_LAUNCHER_TPL_SETTINGS_FILE)
 
-    config_dict = None
-    if os.path.isfile(config_filepath):
-        with open(config_filepath) as json_data:
-            config_dict = json.load(json_data)
+    _config_dict = None
+    if os.path.isfile(config_file_path):
+        _config_dict = read_json(config_file_path)
+
     else:
-        config_dict = get_default_config()
-    return config_filepath, config_dict
+        _config_dict = get_default_config()
+
+    return config_file_path, _config_dict
 
 
 def btn_restore_defaults_clicked(language_code):
-    app_root = util.get_curr_process_work_root_dir()
-    config_filepath = os.path.join(app_root, CONST_MAXBOT_LAUNCHER_FILE)
-    if os.path.exists(str(config_filepath)):
+    app_root = system_tool.get_curr_process_work_root_dir()
+    _config_filepath = os.path.join(app_root, CONST_MAXBOT_LAUNCHER_SETTINGS_FILE_NAME)
+    if os.path.exists(str(_config_filepath)):
         try:
-            os.unlink(str(config_filepath))
+            os.unlink(str(_config_filepath))
         except Exception as exc:
             print(exc)
             pass
 
-    config_dict = get_default_config()
+    _config_dict = get_default_config()
     messagebox.showinfo(translate[language_code]["restore_defaults"], translate[language_code]["done"])
 
     global root
-    load_GUI(root, config_dict)
+    load_GUI(root, _config_dict)
 
 
 def btn_save_clicked():
@@ -167,19 +193,30 @@ def btn_save_clicked():
 
 
 def btn_save_act(slience_mode=True):
-    app_root = util.get_curr_process_work_root_dir()
-    config_filepath = os.path.join(app_root, CONST_MAXBOT_LAUNCHER_FILE)
+    """
+    TODO
+        might need to recheck this function, cuz original code has error
+    """
+    app_root = system_tool.get_curr_process_work_root_dir()
+    _config_filepath = app_root / CONST_MAXBOT_LAUNCHER_SETTINGS_FILE_NAME
 
-    config_dict = get_default_config()
-    language_code = get_language_code_by_name(config_dict["advanced"]["language"])
+    if _config_filepath.is_file():
+        _config_dict = read_json(_config_filepath)
+    else:
+        _config_dict = get_default_config()
 
-    config_dict["advanced"]["language"] = combo_language.get().strip()
-    language_code = get_language_code_by_name(config_dict["advanced"]["language"])
+    language_code = get_language_code_by_name(_config_dict["advanced"]["language"])
 
-    filelist = [txt_file_name[i].get().strip() for i in range(15)]
-    config_dict["list"] = filelist
+    _config_dict["advanced"]["language"] = combo_language.get().strip()
+    language_code = get_language_code_by_name(_config_dict["advanced"]["language"])
 
-    util.save_json(config_dict, config_filepath)
+    # filelist = [txt_file_name[i].get().strip() for i in range(15)] # the original code has error at here
+
+    filelist = _config_dict.get('list', list())
+
+    _config_dict["list"] = filelist
+
+    util.save_json(_config_dict, _config_filepath)
 
     if not slience_mode:
         messagebox.showinfo(translate[language_code]["save"], translate[language_code]["done"])
@@ -207,7 +244,7 @@ def callbackLanguageOnChange(event):
     applyNewLanguage()
 
 
-def get_language_code_by_name(new_language):
+def get_language_code_by_name(new_language) -> str:
     language_code = "en_us"
     if '繁體中文' in new_language:
         language_code = 'zh_tw'

@@ -23,30 +23,28 @@ if __name__ == '__main__':
     web_ui_json = read_json(web_ui_json_template_file)
 
     msg = f"web ui json keys: {web_ui_json.keys()}"
-    print(msg)
+    # print(msg)
 
     ext_dir = PROJECT_DIR / 'webdriver'
 
     maxbot_ext_dir = ext_dir / 'Maxbotplus_1.0.0'
     maxbot_ext_data_dir = maxbot_ext_dir / 'data'
     maxbot_ext_json_path = maxbot_ext_data_dir / 'settings.json'
-    maxbot_ext_json = read_json(maxbot_ext_json_path)
-
-    msg = f"maxbot ext json keys: {maxbot_ext_json.keys()}"
-    print(msg)
+    # maxbot_ext_json = read_json(maxbot_ext_json_path)
+    # msg = f"maxbot ext json keys: {maxbot_ext_json.keys()}"
+    # print(msg)
 
     maxblock_ext_dir = ext_dir / 'Maxblockplus_1.0.0'
     maxblock_ext_data_dir = maxblock_ext_dir / 'data'
     maxblock_ext_json_path = maxblock_ext_data_dir / 'settings.json'
 
-    maxblock_ext_json = read_json(maxblock_ext_json_path)
+    # maxblock_ext_json = read_json(maxblock_ext_json_path)
+    # msg = f"maxblock ext json keys: {maxblock_ext_json.keys()}"
+    # print(msg)
 
-    msg = f"maxblock ext json keys: {maxblock_ext_json.keys()}"
-    print(msg)
-
-    print(web_ui_json.keys() == maxbot_ext_json.keys())
-
-    print(maxbot_ext_json.keys() == maxblock_ext_json.keys())
+    # print(web_ui_json.keys() == maxbot_ext_json.keys())
+    #
+    # print(maxbot_ext_json.keys() == maxblock_ext_json.keys())
 
     browser_ext_tpl_root_dir = tpl_dir / 'browser_extensions'
 
@@ -54,14 +52,21 @@ if __name__ == '__main__':
     maxbot_ext_tpl_dir = browser_ext_tpl_root_dir / maxbot_ext_name
     create_dir(maxbot_ext_tpl_dir)
     maxbot_ext_tpl_json_path = maxbot_ext_tpl_dir / 'settings.json'
-    to_json(
-        maxbot_ext_json, maxbot_ext_tpl_json_path
-    )
+    # to_json(
+    #     maxbot_ext_json, maxbot_ext_tpl_json_path
+    # )
 
     maxblock_ext_name = 'Maxblockplus_1.0.0'
     maxblock_ext_tpl_dir = browser_ext_tpl_root_dir / maxblock_ext_name
     create_dir(maxblock_ext_tpl_dir)
     maxblock_ext_tpl_json_path = maxblock_ext_tpl_dir / 'settings.json'
-    to_json(
-        maxblock_ext_json, maxblock_ext_tpl_json_path
-    )
+    # to_json(
+    #     maxblock_ext_json, maxblock_ext_tpl_json_path
+    # )
+
+    config_launcher_setting_json_path = PROJECT_DIR / 'config_launcher.json'
+    config_launcher_setting_json = read_json(config_launcher_setting_json_path)
+
+    config_launcher_tpl_setting_json_path = tpl_dir / 'config_launcher.json'
+    to_json(config_launcher_setting_json, config_launcher_tpl_setting_json_path)
+
