@@ -2,9 +2,9 @@
 
 ## Demo 示範影片
 
-- [點此查看示範影片](demo_video.md)
-- [youtube channel]()
-
+- [all related demo videos](doc/demo_video.md)
+- [tutorial videos](doc/tutorial_videos.md)
+- [youtube channel](https://www.youtube.com/@MaxYao)
 
 ## 總覽
 
@@ -16,7 +16,9 @@ MaxBot 是一個開放原始碼的蛋黃酥/公車訂位機器人。祝您搶購
 
 部份的售票系統可以透過「人海戰術」來提升買到票的機率，因此建議大家可以麻煩親朋好友去註冊售票系統的帳號。注意：在使用他人的帳號搶票之前，一定要告知當事人用途，並徵詢同意與授權。
 
-MaxBot 的出發點是讓一般民眾與代購黃牛或懂得寫程式的人有類似的基準點或類似的起跑線上，用魔法對抗魔法，當某一天大家都是透過機器人來搶票時，當機器人數量已多到影響一般民眾購票的權利時，售票業者才比較有可能會對未來熱門演唱會改採「實名制」+「抽籤制」，讓更多民眾可以公平地購買到門票，就可以跟「人海戰術」與「搶票機器人」說 bye-bye 。
+MaxBot
+的出發點是讓一般民眾與代購黃牛或懂得寫程式的人有類似的基準點或類似的起跑線上，用魔法對抗魔法，當某一天大家都是透過機器人來搶票時，當機器人數量已多到影響一般民眾購票的權利時，售票業者才比較有可能會對未來熱門演唱會改採「實名制」+「抽籤制」，讓更多民眾可以公平地購買到門票，就可以跟「人海戰術」與「搶票機器人」說
+bye-bye 。
 
 台灣藝文活動的文創法第十條中的「不正方式」由於沒有明確定義，代表的是所有軟體都涉嫌違反。故在此呼籲大家，勿以身試法。
 
@@ -31,7 +33,8 @@ MaxBot is a FREE and open source bot program. Good luck getting your expected fo
 
 作者沒有意圖要他人購得的票券進行加價轉售或是使用在違法的事情上，他人的行為並不在作者的意識支配範圍之內，作者不對他人的非法行為負責。
 
-使用此儲存庫或與之相關的任何程式碼，即表示您同意[法律聲明](https://github.com/max32002/tixcraft_bot/blob/master/LEGAL_NOTICE.md)。作者不對該儲存庫的使用負責與背書，也不對其他使用者所做的任何副本、分叉、重新上傳或與 MaxBot 相關的任何其他內容負責。 這是作者唯一的帳戶和儲存庫。 為了防止假冒或不負責任的行為，請遵守此儲存庫使用的 GNU GPL 授權。
+使用此儲存庫或與之相關的任何程式碼，即表示您同意[法律聲明](https://github.com/max32002/tixcraft_bot/blob/master/LEGAL_NOTICE.md)。作者不對該儲存庫的使用負責與背書，也不對其他使用者所做的任何副本、分叉、重新上傳或與
+MaxBot 相關的任何其他內容負責。 這是作者唯一的帳戶和儲存庫。 為了防止假冒或不負責任的行為，請遵守此儲存庫使用的 GNU GPL 授權。
 
 </details>
 
@@ -67,12 +70,10 @@ https://github.com/max32002/tixcraft_bot/releases
 - 如果你是要用「原始碼」執行 MaxBot, 在透過 git clone 或在 github 按下載原始碼的 zip 檔， python 版本使用 3.7 / 3.8 / 3.9 / 3.10 這 4 個版號測試功能正常。
 - 如果有辦法的話，建議使用原始碼來執行 MaxBot，執行上的「效率」與「相容性」的問題會較少。
 
-
-
-
 ## How to Use 如何使用
 
 如何使用網頁說明:
+
 - tixcraft / indievox / ticketmaster: https://max-everyday.com/2018/03/tixcraft-bot/
 - kktix: https://max-everyday.com/2018/12/kktix-bot/
 - cityline: https://max-everyday.com/2019/03/cityline-bot/
@@ -140,24 +141,28 @@ https://github.com/max32002/tixcraft_bot/issues/82#issuecomment-1878986084
 
 不管是 macOS 還是 Windows 預設都是沒有 git 這個指令，如果 Step 1 執行後, 沒有檔案被下載, 請先安裝 git 到你的作業系統。或是使用 github 網頁裡的 Download 功能把 python 腳本下載。
 
-如果你選擇下載 github 上的 zip 檔, 在 Step 2 進入目錄的指令可能會遇到問題, 因為「直接解壓縮」後的目錄名稱並不是 tixcraft_bot 而是 tixcraft_bot-master, 你在進入的資料夾名稱, 需要調整為你實際解壓縮後的目錄名稱。
+如果你選擇下載 github 上的 zip 檔, 在 Step 2 進入目錄的指令可能會遇到問題, 因為「直接解壓縮」後的目錄名稱並不是 tixcraft_bot 而是 tixcraft_bot-master, 你在進入的資料夾名稱,
+需要調整為你實際解壓縮後的目錄名稱。
 
-透過瀏覽器下載 github 上的 zip 檔, 在 Windows / macOS / Linux 平台, 預設的路徑在「下載」(~/Download) 的資料夾, 你在執行的 Terminal 視窗的路徑, 與你解壓縮的路徑可能不同, 直接執行上面的指令, 會無法進入到預期的資料夾內。
+透過瀏覽器下載 github 上的 zip 檔, 在 Windows / macOS / Linux 平台, 預設的路徑在「下載」(~/Download) 的資料夾, 你在執行的 Terminal 視窗的路徑, 與你解壓縮的路徑可能不同,
+直接執行上面的指令, 會無法進入到預期的資料夾內。
 
 ### Q: 取得 source code 後跑出來 fatal: destination path 'tixcraft_bot' already exists and is not an empty directory.想問是什麼意思?
 
 <b>A: </b>執行 git clone 2 次, 重覆取得 source code, 才會有這個問題, 如果 tixcraft_bot 目錄已經存在, 直接
 <code>cd tixcraft_bot</code>
-就可以了。
-如果你想把已下載的刪除, 可以直接把 tixcraft_bot 目錄刪掉即可。
-如果你想更新 source code, 可以重新下載, 或是先 <code>cd tixcraft_bot</code> 目錄後, 再執行<code>git pull</code>, 可以更新 source code 為新的版本。
+就可以了。 如果你想把已下載的刪除, 可以直接把 tixcraft_bot 目錄刪掉即可。 如果你想更新 source code, 可以重新下載, 或是先 <code>cd tixcraft_bot</code> 目錄後,
+再執行<code>git pull</code>, 可以更新 source code 為新的版本。
 
 #### PS:
 
 - 請先確定你的 python 執行環境下已安裝 selenium 或 nodriver 及相關的套件，請參考 requirement.txt 檔案內容。
 - 透過 python3 執行 settings.py 就可以有 GUI 的設定介面。
-- 如果你是使用 macOS 並且執行環境沒有 python3，請 python 官方網站([https://www.python.org/downloads/](https://www.python.org/downloads/))來安裝 python3.
-- 如果你是使用 Firefox, ChromeDriver 的元件是叫 geckodriver，下載點在：https://github.com/mozilla/geckodriver/releases ，與 ChromeDriver 的處理方式是一樣，如果是 mac 電腦，要在元件按右鍵開啟，做一次授權的動作，mac 有 2 個版本，-macos.tar.gz 與 -macos-aarch64.tar.gz ，如果是 intel CPU 的版本，請服用前面沒有 aarch64 的版本。
+- 如果你是使用 macOS 並且執行環境沒有 python3，請 python 官方網站([https://www.python.org/downloads/](https://www.python.org/downloads/))來安裝
+  python3.
+- 如果你是使用 Firefox, ChromeDriver 的元件是叫 geckodriver，下載點在：https://github.com/mozilla/geckodriver/releases ，與 ChromeDriver
+  的處理方式是一樣，如果是 mac 電腦，要在元件按右鍵開啟，做一次授權的動作，mac 有 2 個版本，-macos.tar.gz 與 -macos-aarch64.tar.gz ，如果是 intel CPU 的版本，請服用前面沒有
+  aarch64 的版本。
 
 #### PS：
 
@@ -175,7 +180,9 @@ https://zh-tw.emeditor.com/increase-virtual-memory/
 </details>
 
 ## File Description 檔案說明
+
 主要的檔案說明:
+
 - chrome_tixcraft.py : 搶票機器人主程式，用來自動化網頁的操作，使用元件是 selenium。
 - nodriver_tixcraft.py : 也是搶票機器人主程式，用來自動化網頁的操作，使用的元件是 nodriver。
 - settings.py : 編輯 settings.json 的 GUI 介面。提供圖片 OCR 功能給 chrome 擴充功能。支援定時啟用/停用 MaxBot。
@@ -186,12 +193,10 @@ https://zh-tw.emeditor.com/increase-virtual-memory/
 
 https://stackoverflow.max-everyday.com/2018/03/selenium-chrome-webdriver/
 
-
 ## TODO about Cpatcha 關於驗證碼
 
 目前自動輸入驗證碼用的元件是:
 https://github.com/sml2h3/ddddocr
-
 
 ## Common Problems 常見問題整理
 

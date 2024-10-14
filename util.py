@@ -1938,7 +1938,11 @@ def get_kktix_status_by_url(url):
     return registerStatus
 
 
-def launch_maxbot(script_name="chrome_tixcraft", filename="", homepage="", kktix_account="", kktix_password="",
+def launch_maxbot(script_name="chrome_tixcraft",
+                  filename="",
+                  homepage="",
+                  kktix_account="",
+                  kktix_password="",
                   window_size="", headless=""):
     cmd_argument = []
     if len(filename) > 0:

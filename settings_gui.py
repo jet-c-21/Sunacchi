@@ -1159,10 +1159,10 @@ def btn_save_act(slience_mode=False):
 
 
 def btn_run_clicked():
-    print('run button pressed.')
+    print('[*INFO*] - run button pressed.')
     Root_Dir = ""
     save_ret = btn_save_act(slience_mode=True)
-    print("save config result:", save_ret)
+    print("[*INFO*] - save config result:", save_ret)
     if save_ret:
         launch_maxbot()
 
@@ -1183,6 +1183,9 @@ def launch_maxbot():
     if webdriver_type == CONST_WEBDRIVER_TYPE_NODRIVER:
         script_name = "nodriver_tixcraft"
 
+    msg = f"[*INFO*] - triggered script_name: {script_name}"
+    print(msg)
+
     global txt_window_size
     window_size = txt_window_size.get().strip()
     if len(window_size) > 0:
@@ -1196,7 +1199,10 @@ def launch_maxbot():
             window_size = window_size + "," + str(launch_counter)
             # print("window_size:", window_size)
 
-    threading.Thread(target=util.launch_maxbot, args=(script_name, "", "", "", "", window_size,)).start()
+    threading.Thread(
+        target=util.launch_maxbot,
+        args=(script_name, "", "", "", "", window_size,)
+    ).start()
 
 
 def show_preview_text():
@@ -3164,6 +3170,9 @@ def AboutTab(root, language_code):
 
 
 def get_action_bar(root, language_code):
+    """
+    primary buttons defined functino
+    """
     frame_action = Frame(root)
 
     global btn_run

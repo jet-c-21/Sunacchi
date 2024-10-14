@@ -476,7 +476,7 @@ def get_uc_options(uc, config_dict, webdriver_path):
     return options
 
 
-def load_chromdriver_uc(config_dict):
+def load_chromedriver_uc(config_dict):
     import undetected_chromedriver as uc
 
     show_debug_message = True  # debug.
@@ -643,6 +643,7 @@ def get_driver_by_config(config_dict):
         # method 6: Selenium Stealth
         if config_dict["webdriver_type"] == CONST_WEBDRIVER_TYPE_SELENIUM:
             driver = load_chromdriver_normal(config_dict, config_dict["webdriver_type"])
+
         if config_dict["webdriver_type"] == CONST_WEBDRIVER_TYPE_UC:
             # method 5: uc
             # multiprocessing not work bug.
@@ -650,7 +651,8 @@ def get_driver_by_config(config_dict):
                 if hasattr(sys, 'frozen'):
                     from multiprocessing import freeze_support
                     freeze_support()
-            driver = load_chromdriver_uc(config_dict)
+            driver = load_chromedriver_uc(config_dict)
+
         if config_dict["webdriver_type"] == CONST_WEBDRIVER_TYPE_DP:
             # driver = ChromiumPage()
             pass
