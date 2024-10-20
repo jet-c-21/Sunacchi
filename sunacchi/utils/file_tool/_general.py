@@ -23,6 +23,20 @@ def create_dir(dir_path: Union[pathlib.Path, str],
     return dir_path
 
 
+def str_ls_to_txt_file(str_ls: List, fp: Union[pathlib.Path, str]) -> pathlib.Path:
+    fp = pathlib.Path(fp)
+    with open(fp, 'w', encoding='utf-8') as f:
+        for s in str_ls:
+            f.write(str(s) + '\n')
+    return fp
+
+
+def txt_file_to_str_ls(fp: Union[pathlib.Path, str]) -> List:
+    with open(fp, 'r', encoding='utf-8') as f:
+        str_ls = [line.strip() for line in f.readlines()]
+    return str_ls
+
+
 def to_json(data: Union[Dict, Namespace, List],
             fp: Union[str, pathlib.Path]) -> pathlib.Path:
     fp = pathlib.Path(fp)

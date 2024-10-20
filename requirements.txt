@@ -1,19 +1,45 @@
-certifi
-chardet
-chromedriver-autoinstaller-max
-cryptography
-ddddocr
-idna
+# general
+setuptools; python_version >= '3.12'
+
+# version handling
 looseversion
-nodriver
+
+# Security and encryption
+cryptography
+
+# HTTP and networking libraries
+urllib3
+idna
+chardet
+certifi
+
+# ip geo location
+ipapi
+
+# audio handling
+playsound==1.2.2
+
+# image processing
 numpy
 Pillow
-playsound==1.2.2
+
+# OCR
+ddddocr
+
+# data parsing
+pandas
+beautifulsoup4
+
+# Clipboard handling
 pyperclip
-selenium
+
+# Web frameworks
 tornado
+
+# webdriver automation
+selenium
 undetected-chromedriver
-urllib3
-#PS: nodriver need python 3.9+
-# nodriver max modified version:
+chromedriver-autoinstaller-max
+nodriver # PS: nodriver need python 3.9+
+## nodriver max modified version:
 # python -m pip install git+https://github.com/max32002/nodriver

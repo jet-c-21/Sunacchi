@@ -17,6 +17,10 @@ backup/
 kite_tutorial.ipynb
 *.json
 *.txt
+*.jpg
+*.jpeg
+*.png
+*.csv
 
 ### Chrome extension file
 *.crx

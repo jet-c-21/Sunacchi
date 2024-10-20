@@ -1934,7 +1934,7 @@ async def nodriver_facebook_main(tab, config_dict):
 
 def get_nodriver_browser_args():
     browser_args = [
-        "--user-agent=%s" % (USER_AGENT),
+        f"--user-agent={USER_AGENT}",
         "--disable-2d-canvas-clip-aa",
         "--disable-3d-apis",
         "--disable-animations",
@@ -2391,7 +2391,8 @@ async def main(args):
 
 def cli():
     parser = argparse.ArgumentParser(
-        description="MaxBot Aggument Parser")
+        description="MaxBot Aggument Parser"
+    )
 
     parser.add_argument("--input",
                         help="config file path",
