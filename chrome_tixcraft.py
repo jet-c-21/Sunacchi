@@ -37,6 +37,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from urllib3.exceptions import InsecureRequestWarning
 
+from sunacchi.utils.datetime_tool import (
+    get_curr_datetime_str
+)
+
 import util
 from NonBrowser import NonBrowser
 
@@ -318,13 +322,13 @@ def get_chrome_options(webdriver_path, config_dict):
     return chrome_options
 
 
-def load_chromdriver_normal(config_dict, driver_type):
+def load_chromedriver_normal(config_dict, driver_type):
     show_debug_message = config_dict["advanced"]["verbose"]
 
     driver = None
 
-    Root_Dir = system_tool.get_curr_process_work_root_dir()
-    webdriver_path = os.path.join(Root_Dir, "webdriver")
+    _curr_work_root_dir = system_tool.get_curr_process_work_root_dir()
+    webdriver_path = os.path.join(_curr_work_root_dir, "webdriver")
     chromedriver_path = get_chromedriver_path(webdriver_path)
 
     os.makedirs(webdriver_path, exist_ok=True)
@@ -334,11 +338,13 @@ def load_chromdriver_normal(config_dict, driver_type):
         chromedriver_autoinstaller_max.install(path=webdriver_path, make_version_dir=False)
 
     if not os.path.exists(chromedriver_path):
-        print("Please download chromedriver and extract zip to webdriver folder from this url:")
-        print("請下在面的網址下載與你chrome瀏覽器相同版本的chromedriver,解壓縮後放到webdriver目錄裡：")
+        print("[*WARN*] - Please download chromedriver and extract zip to webdriver folder from this url:")
+        # print("請下在面的網址下載與你chrome瀏覽器相同版本的chromedriver,解壓縮後放到webdriver目錄裡：")
         print(CONST_CHROME_DRIVER_WEBSITE)
+        print()
+
     else:
-        chrome_service = Service(chromedriver_path)
+        chrome_service = Service(chromedriver_path)  # selenium.webdriver.chrome.service.Service
         chrome_options = get_chrome_options(webdriver_path, config_dict)
         try:
             driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
@@ -383,14 +389,14 @@ def get_uc_options(uc, config_dict, webdriver_path):
     options.unhandled_prompt_behavior = "accept"
     # print("strategy", options.page_load_strategy)
 
-    is_log_performace = False
-    performace_site = ['ticketplus']
-    for site in performace_site:
+    is_log_performance = False
+    performance_site = ['ticketplus']
+    for site in performance_site:
         if site in config_dict["homepage"]:
-            is_log_performace = True
+            is_log_performance = True
             break
 
-    if is_log_performace:
+    if is_log_performance:
         options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
 
     load_extension_path = ""
@@ -589,7 +595,7 @@ def load_chromedriver_uc(config_dict):
             print("Unable to use undetected_chromedriver, ")
             print("try to use local chromedriver to launch chrome browser.")
             driver_type = "selenium"
-            driver = load_chromdriver_normal(config_dict, driver_type)
+            driver = load_chromedriver_normal(config_dict, driver_type)
         else:
             print("建議您自行下載 ChromeDriver 到 webdriver 的資料夾下")
             print("you need manually download ChromeDriver to webdriver folder.")
@@ -615,34 +621,47 @@ def get_driver_by_config(config_dict):
     # read config.
     homepage = config_dict["homepage"]
 
-    # output config:
-    print("current time:", datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-    print("maxbot app version:", CONST_APP_VERSION)
-    print("python version:", platform.python_version())
-    print("platform:", platform.platform())
-    print("homepage:", homepage)
-    print("browser:", config_dict["browser"])
-    # print("headless:", config_dict["advanced"]["headless"])
+    # log config:
+    msg = f"[*INFO*] - current time: {get_curr_datetime_str()}"
+    print(msg)
+    msg = f"[*INFO*] - maxbot app version: {CONST_APP_VERSION}"
+    print(msg)
+    msg = f"[*INFO*] - python version: {platform.python_version()}"
+    print(msg)
+    msg = f"[*INFO*] - platform: {platform.platform()}"
+    print(msg)
+    msg = f"[*INFO*] - target homepage: {homepage}"
+    print(msg)
+    msg = f"[*INFO*] - confing browser: {config_dict['browser']}"
+    print(msg)
+    msg = f"[*INFO*] - headless mode: {config_dict['advanced']['headless']}"
+    print(msg)
+
     # print("ticket_number:", str(config_dict["ticket_number"]))
 
     # print(config_dict["tixcraft"])
     # print("==[advanced config]==")
     if config_dict["advanced"]["verbose"]:
+        print(f"[*INFO*] - advanced config:")
         print(config_dict["advanced"])
-    print("webdriver_type:", config_dict["webdriver_type"])
+        print()
+
+    msg = f"[*INFO*] - webdriver_type: {config_dict['webdriver_type']}"
+    print(msg)
 
     # entry point
     if homepage is None:
         homepage = ""
 
-    Root_Dir = system_tool.get_curr_process_work_root_dir()
-    webdriver_path = os.path.join(Root_Dir, "webdriver")
+    _work_root_dir = system_tool.get_curr_process_work_root_dir()
+    # webdriver_dir = os.path.join(_work_root_dir, "webdriver")
+    webdriver_dir = _work_root_dir / 'webdriver'
     # print("platform.system().lower():", platform.system().lower())
 
     if config_dict["browser"] in ["chrome", "brave"]:
         # method 6: Selenium Stealth
         if config_dict["webdriver_type"] == CONST_WEBDRIVER_TYPE_SELENIUM:
-            driver = load_chromdriver_normal(config_dict, config_dict["webdriver_type"])
+            driver = load_chromedriver_normal(config_dict, config_dict["webdriver_type"])
 
         if config_dict["webdriver_type"] == CONST_WEBDRIVER_TYPE_UC:
             # method 5: uc
@@ -651,6 +670,7 @@ def get_driver_by_config(config_dict):
                 if hasattr(sys, 'frozen'):
                     from multiprocessing import freeze_support
                     freeze_support()
+
             driver = load_chromedriver_uc(config_dict)
 
         if config_dict["webdriver_type"] == CONST_WEBDRIVER_TYPE_DP:
@@ -660,15 +680,15 @@ def get_driver_by_config(config_dict):
     if config_dict["browser"] == "firefox":
         # default os is linux/mac
         # download url: https://github.com/mozilla/geckodriver/releases
-        chromedriver_path = os.path.join(webdriver_path, "geckodriver")
+        chromedriver_path = os.path.join(webdriver_dir, "geckodriver")
         if platform.system().lower() == "windows":
-            chromedriver_path = os.path.join(webdriver_path, "geckodriver.exe")
+            chromedriver_path = os.path.join(webdriver_dir, "geckodriver.exe")
 
         if "macos" in platform.platform().lower():
             if "arm64" in platform.platform().lower():
-                chromedriver_path = os.path.join(webdriver_path, "geckodriver_arm")
+                chromedriver_path = os.path.join(webdriver_dir, "geckodriver_arm")
 
-        webdriver_service = Service(chromedriver_path)
+        webdriver_service = Service(chromedriver_path)  # selenium.webdriver.chrome.service.Service
         driver = None
         try:
             from selenium.webdriver.firefox.options import Options
@@ -699,12 +719,12 @@ def get_driver_by_config(config_dict):
     if config_dict["browser"] == "edge":
         # default os is linux/mac
         # download url: https://developer.microsoft.com/zh-tw/microsoft-edge/tools/webdriver/
-        chromedriver_path = os.path.join(webdriver_path, "msedgedriver")
+        chromedriver_path = os.path.join(webdriver_dir, "msedgedriver")
         if platform.system().lower() == "windows":
-            chromedriver_path = os.path.join(webdriver_path, "msedgedriver.exe")
+            chromedriver_path = os.path.join(webdriver_dir, "msedgedriver.exe")
 
         webdriver_service = Service(chromedriver_path)
-        chrome_options = get_chrome_options(webdriver_path, config_dict)
+        chrome_options = get_chrome_options(webdriver_dir, config_dict)
 
         driver = None
         try:

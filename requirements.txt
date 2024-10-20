@@ -1,4 +1,5 @@
 # general
+tqdm
 setuptools; python_version >= '3.12'
 
 # version handling

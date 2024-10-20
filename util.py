@@ -53,9 +53,6 @@ def get_ip_address():
     return ip
 
 
-
-
-
 def remove_html_tags(text):
     ret = ""
     if not text is None:
@@ -446,12 +443,6 @@ def get_brave_bin_path():
         brave_path = '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser'
 
     return brave_path
-
-
-
-
-
-
 
 
 # convert web string to reg pattern
@@ -1947,14 +1938,19 @@ def launch_maxbot(script_name="chrome_tixcraft",
     cmd_argument = []
     if len(filename) > 0:
         cmd_argument.append('--input=' + filename)
+
     if len(homepage) > 0:
         cmd_argument.append('--homepage=' + homepage)
+
     if len(kktix_account) > 0:
         cmd_argument.append('--kktix_account=' + kktix_account)
+
     if len(kktix_password) > 0:
         cmd_argument.append('--kktix_password=' + kktix_password)
+
     if len(window_size) > 0:
         cmd_argument.append('--window_size=' + window_size)
+
     if len(headless) > 0:
         cmd_argument.append('--headless=' + headless)
 
@@ -1965,30 +1961,42 @@ def launch_maxbot(script_name="chrome_tixcraft",
         cmd = './' + script_name + ' '.join(cmd_argument)
         if platform.system() == 'Darwin':
             print("execute MacOS python script")
+
         if platform.system() == 'Linux':
             print("execute linux binary")
+
         if platform.system() == 'Windows':
             print("execute .exe binary.")
             cmd = script_name + '.exe ' + ' '.join(cmd_argument)
+
         subprocess.Popen(cmd, shell=True, cwd=working_dir)
+
     else:
         interpreter_binary = 'python'
         interpreter_binary_alt = 'python3'
         if platform.system() != 'Windows':
             interpreter_binary = 'python3'
             interpreter_binary_alt = 'python'
-        print("execute in shell mode.")
+        print("[*INFO*] - execute in shell mode.")
+
+        _py_script_name = f"{script_name}.py"
 
         try:
-            print('try', interpreter_binary)
-            cmd_array = [interpreter_binary, script_name + '.py'] + cmd_argument
+            msg = f"[*INFO*] - try using {interpreter_binary} to execute {_py_script_name}"
+            print(msg)
+
+            cmd_array = [interpreter_binary, _py_script_name] + cmd_argument
             s = subprocess.Popen(cmd_array, cwd=working_dir)
-        except Exception as exc:
-            print('try', interpreter_binary_alt)
+        except Exception as e:
+            msg = f"[*WARN*] - {interpreter_binary} failed to execute {_py_script_name}, Error: {e}"
+            print(msg)
+
+            msg = f"[*INFO*] - try using {interpreter_binary_alt} to execute {_py_script_name}"
+            print(msg)
             try:
-                cmd_array = [interpreter_binary_alt, script_name + '.py'] + cmd_argument
+                cmd_array = [interpreter_binary_alt, _py_script_name] + cmd_argument
                 s = subprocess.Popen(cmd_array, cwd=working_dir)
-            except Exception as exc:
-                msg = str(exc)
-                print("exeption:", msg)
-                pass
+            except Exception as e:
+                msg = f"[*WARN*] - alt interpreter {interpreter_binary_alt} " \
+                      f"failed to execute {_py_script_name}, Error: {e}"
+                print(msg)
