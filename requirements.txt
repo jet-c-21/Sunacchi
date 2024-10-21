@@ -2,6 +2,11 @@
 tqdm
 setuptools; python_version >= '3.12'
 
+# colorful print in console
+rich
+colorama
+
+
 # version handling
 looseversion
 

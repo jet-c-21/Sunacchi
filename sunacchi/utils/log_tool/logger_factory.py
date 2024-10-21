@@ -10,14 +10,10 @@ import os
 import pathlib
 from typing import Union
 
-from . import DFLT_LOG_PATH
-from .. import var as VAR
-
-from .ichase_logger import ICHASELogger
-from ..console_tool.rich_printer.rich_printer import RichPrinter
-from ..general import get_free_space_mb
-from ..notify_tool.line.tool import send_low_free_space_line_notify
-from ..edge_tool.aibr import get_device_id
+from sunacchi.utils.file_tool import create_dir
+from sunacchi.utils.log_tool.pretty_logger import PrettyLogger
+from sunacchi.utils.console_tool.rich_printer import RichPrinter
+from sunacchi.utils.system_tool import get_curr_process_work_root_dir
 
 
 class CustomFormatter(logging.Formatter):
@@ -57,17 +53,21 @@ class CustomFormatter(logging.Formatter):
 
 
 class FileHandler(logging.FileHandler):
-    def __init__(self, log_file):
-        os.makedirs(os.path.dirname(log_file), exist_ok=True)
+    def __init__(self, log_file: pathlib.Path):
+        log_file = pathlib.Path(log_file)
+        if log_file.parent.name != '' and not log_file.parent.is_dir():
+            create_dir(log_file.parent)
         super().__init__(log_file, encoding='utf-8')
 
+
 class CustomRotatingFileHandler(logging.handlers.RotatingFileHandler):
-    def __init__(self, log_file, max_mb=5, backup_count=1):        
-        os.makedirs(os.path.dirname(log_file), exist_ok=True)        
-        super().__init__(log_file, 
+    def __init__(self, log_file, max_mb=5, backup_count=1):
+        os.makedirs(os.path.dirname(log_file), exist_ok=True)
+        super().__init__(log_file,
                          maxBytes=max_mb * 1024 * 1024,  # X MB
-                         backupCount=backup_count,  
+                         backupCount=backup_count,
                          encoding='utf-8')
+
 
 class ConsoleHandler(logging.StreamHandler):
     pass
@@ -82,45 +82,51 @@ LOGGER_DICT = dict()
 def create_logger(name,
                   log_lv=logging.DEBUG,
                   log_path: Union[pathlib.Path, str, None] = 'default',
-                  check_free_space=True,
                   mute_logger=False,
                   max_save_mb=5,
-                  backup_count=0) -> ICHASELogger:
+                  backup_count=0,
+                  verbose=False) -> PrettyLogger:
     if name in LOGGER_DICT:
         return LOGGER_DICT[name]
 
-    rich_printer = RichPrinter()
+    if verbose:
+        rich_printer = RichPrinter()
+    else:
+        rich_printer = None
 
     logger = logging.getLogger(name)
     logger.setLevel(log_lv)
 
     msg = f"new logger name: {logger.name}, LEVEL: {logging.getLevelName(logger.level)} ({logger.level})"
     if not mute_logger:
-        rich_printer(msg)
+        if verbose:
+            rich_printer(msg)
 
     console_handler.setLevel(log_lv)
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 
     if log_path is not None:
-        curr_free_space_mb = get_free_space_mb()
-        if check_free_space:
-            if curr_free_space_mb < VAR.LOW_FREE_SPACE_THRESH_MB:
-                msg = f"[WARNING] - Device is at Low Free Space: {get_free_space_mb(to_int=True)}"
-                rich_printer(msg)
-                send_low_free_space_line_notify()
-                raise VAR.LOW_FREE_SPACE_ERROR
-        setting_log_path = ""
+        # # >>> check disk free space >>>
+        # curr_free_space_mb = get_free_space_mb()
+        # if check_free_space:
+        #     if curr_free_space_mb < VAR.LOW_FREE_SPACE_THRESH_MB:
+        #         msg = f"[WARNING] - Device is at Low Free Space: {get_free_space_mb(to_int=True)}"
+        #         rich_printer(msg)
+        #         raise VAR.LOW_FREE_SPACE_ERROR
+        # # <<< check disk free space <<<
+
         if log_path == 'default':
-            setting_log_path = DFLT_LOG_PATH
+            _log_file_dest_path = get_curr_process_work_root_dir() / 'logs' / 'sunacchi-dflt.log'
+
         else:
-            setting_log_path = log_path
+            _log_file_dest_path = pathlib.Path(log_path)
 
         if backup_count == 0:
-            file_handler = FileHandler(setting_log_path)
+            file_handler = FileHandler(_log_file_dest_path)
         else:
             # Auto-refresh is allowed only if the backup count exceeds 1.
-            file_handler = CustomRotatingFileHandler(setting_log_path, max_mb=max_save_mb, backup_count=backup_count)
+            file_handler = CustomRotatingFileHandler(_log_file_dest_path, max_mb=max_save_mb, backup_count=backup_count)
 
         file_handler_formatter = logging.Formatter(
             '⏰ %(asctime)s <%(name)s> [%(levelname)s] 📝 %(message)s'
@@ -128,35 +134,34 @@ def create_logger(name,
         file_handler.setFormatter(file_handler_formatter)
         file_handler.setLevel(log_lv)
         logger.addHandler(file_handler)
-            
+
         msg = f"<{name}>'s log file = {file_handler.baseFilename}"
         if not mute_logger:
-            rich_printer(msg)
+            if verbose:
+                rich_printer(msg)
 
         log_path = pathlib.Path(file_handler.baseFilename)
         try:
             log_path.parent.chmod(0o777)
-        except Exception as e :
-            print(f"[logger_factory] [create_logger()] :{e}")
+        except Exception as e:
+            print(f"[logger_factory] [create_logger()] - failed to chmod log file parent folder to 0o777, Error: {e}")
 
-        new_logger = ICHASELogger(
+        new_logger = PrettyLogger(
             logger,
             log_path,
             console_handler,
-            check_free_space=check_free_space,
             mute_logger=mute_logger,
         )
         try:
             log_path.chmod(0o777)
-        except Exception as e :
-            print(f"[logger_factory] [create_logger()] :{e}")
+        except Exception as e:
+            print(f"[logger_factory] [create_logger()] - failed to chmod log file to 0o777, Error: {e}")
 
     else:
-        new_logger = ICHASELogger(
+        new_logger = PrettyLogger(
             logger,
             None,
             console_handler,
-            check_free_space=check_free_space
         )
 
     LOGGER_DICT[new_logger.name] = new_logger

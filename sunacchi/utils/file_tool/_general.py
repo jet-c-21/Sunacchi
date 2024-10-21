@@ -110,3 +110,9 @@ def find_all_files_with_ext(root_dir: pathlib.Path, file_ext: str) -> List[pathl
         print(msg)
 
     return matched_f_ls
+
+
+def chmod_777(fp: Union[pathlib.Path, str]):
+    fp = pathlib.Path(fp)
+    if fp.exists():
+        fp.chmod(0o777)

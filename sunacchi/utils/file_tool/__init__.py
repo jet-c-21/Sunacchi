@@ -5,6 +5,7 @@ GitHub: https://github.com/jet-c-21
 Create Date: 10/10/24
 """
 from ._general import (
+    chmod_777,
     create_dir,
     txt_file_to_str_ls,
     str_ls_to_txt_file,

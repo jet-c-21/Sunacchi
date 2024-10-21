@@ -4,7 +4,7 @@
 # import jieba
 # from DrissionPage import ChromiumPage
 # import nodriver as uc
-from typing import List
+from typing import List, Dict
 import pathlib
 import argparse
 import base64
@@ -322,7 +322,7 @@ def get_chrome_options(webdriver_path, config_dict):
     return chrome_options
 
 
-def load_chromedriver_normal(config_dict, driver_type):
+def load_chromedriver_normal(config_dict: Dict, driver_type: str):
     show_debug_message = config_dict["advanced"]["verbose"]
 
     driver = None
@@ -348,10 +348,11 @@ def load_chromedriver_normal(config_dict, driver_type):
         chrome_options = get_chrome_options(webdriver_path, config_dict)
         try:
             driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
-        except WebDriverException as exc:
-            error_message = str(exc)
+        except WebDriverException as e:
+            msg = f"[**] - failed to webdriver.Chrome by selenium service, Error: {e}"
+            error_message = str(e)
             if show_debug_message:
-                print(exc)
+                print(e)
             left_part = error_message.split("Stacktrace:")[0] if "Stacktrace:" in error_message else None
             if "This version of ChromeDriver only supports Chrome version" in error_message:
                 print(CONST_CHROME_VERSION_NOT_MATCH_EN)
@@ -615,7 +616,11 @@ def close_browser_tabs(driver):
             pass
 
 
-def get_driver_by_config(config_dict):
+def _get_chrome_driver_by_config(config_dict: Dict):
+    pass
+
+
+def get_driver_by_config(config_dict: Dict):
     driver = None
 
     # read config.

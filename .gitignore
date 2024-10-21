@@ -12,15 +12,18 @@
 .virtual_documents/
 .history/
 backup/
+logs/
 
 ## Files
 kite_tutorial.ipynb
+*.log
 *.json
 *.txt
 *.jpg
 *.jpeg
 *.png
 *.csv
+
 
 ### Chrome extension file
 *.crx
