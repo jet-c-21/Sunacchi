@@ -673,6 +673,8 @@ def settings_gui_timer():
 
 
 if __name__ == "__main__":
+    
+
     global GLOBAL_SERVER_SHUTDOWN
     GLOBAL_SERVER_SHUTDOWN = False
 

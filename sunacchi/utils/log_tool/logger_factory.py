@@ -31,8 +31,8 @@ class CustomFormatter(logging.Formatter):
         if cls.__FORMATS is None:
             cls.__FORMATS = {
                 level: logging.Formatter(
-                    f'%(asctime)s {color}%(levelname)-3s\x1b[0m \x1b[35m%(name)s\x1b[0m 📝 %(message)s',
-                    '%Y-%m-%d %H:%M:%S'
+                    f"%(asctime)s.%(msecs)03d {color}%(levelname)-3s\x1b[0m \x1b[35m%(name)s\x1b[0m \U0001F4DD %(message)s",
+                    datefmt='%Y-%m-%d %H:%M:%S'
                 )
                 for level, color in cls.__LEVEL_COLORS
             }
@@ -129,7 +129,8 @@ def create_logger(name,
             file_handler = CustomRotatingFileHandler(_log_file_dest_path, max_mb=max_save_mb, backup_count=backup_count)
 
         file_handler_formatter = logging.Formatter(
-            '⏰ %(asctime)s <%(name)s> [%(levelname)s] 📝 %(message)s'
+            '⏰ %(asctime)s.%(msecs)03d <%(name)s> [%(levelname)s] 📝 %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
         )
         file_handler.setFormatter(file_handler_formatter)
         file_handler.setLevel(log_lv)
