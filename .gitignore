@@ -13,6 +13,7 @@
 .history/
 backup/
 logs/
+WALLS/
 
 ## Files
 kite_tutorial.ipynb

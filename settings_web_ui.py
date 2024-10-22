@@ -50,6 +50,9 @@ except Exception as exc:
 
 from sunacchi.utils.log_tool import create_logger
 from sunacchi.utils.file_tool import create_dir
+from sunacchi.bot import (
+    launch_maxbot_main_script_in_subprocess
+)
 
 THIS_FILE_PATH = pathlib.Path(__file__).absolute()
 THIS_FILE_PARENT_DIR = THIS_FILE_PATH.parent
@@ -66,7 +69,7 @@ logger_name = f"{THIS_FILE_PATH.stem}"
 log_path = LOG_DIR / f"{logger_name}.log"
 logger = create_logger(logger_name, log_path=log_path)
 
-# >>>>>> const var >>>>>>
+# >>> >>> const variables >>> >>>
 CONST_APP_VERSION = f"Sunacchi - v{sunacchi.__version__}"
 
 CONST_MAXBOT_ANSWER_ONLINE_FILE = "MAXBOT_ONLINE_ANSWER.txt"
@@ -126,7 +129,7 @@ URL_FIREFOX_DRIVER = 'https://github.com/mozilla/geckodriver/releases'
 URL_EDGE_DRIVER = 'https://developer.microsoft.com/zh-tw/microsoft-edge/tools/webdriver/'
 
 
-# <<<<<< const var <<<<<<
+# <<< <<< const variables <<< <<<
 
 def get_default_config() -> Dict:
     """
@@ -352,41 +355,63 @@ def maxbot_resume():
 
 
 def launch_maxbot():
-    msg = f"start doing launch_maxbot() ..."
-    logger.debug(msg)
+    """
+    1. decide which script to launch
+    2. do window size handling
+    3. start the script with another Thread
 
-    global launch_counter
-    if "launch_counter" in globals():
-        launch_counter += 1
-    else:
-        launch_counter = 0
+    """
+    msg = f"start doing launch_maxbot() ..."
+    logger.info(msg)
+
+    global bot_launched_count
+    # if "launch_counter" in globals():
+    #     bot_launched_count += 1
+    # else:
+    #     bot_launched_count = 0
+
+    bot_launched_count += 1
 
     config_filepath, config_dict = _load_settings_from_local_json_file()
     config_dict = decrypt_password(config_dict)
 
-    script_name = "chrome_tixcraft"
-    if config_dict["webdriver_type"] == CONST_WEBDRIVER_TYPE_NODRIVER:
-        script_name = "nodriver_tixcraft"
+    script_name = 'chrome_tixcraft'
+    if config_dict['webdriver_type'] == CONST_WEBDRIVER_TYPE_NODRIVER:
+        script_name = 'nodriver_tixcraft'
 
-    window_size = config_dict["advanced"]["window_size"]
+    # do window size handling
+    window_size = config_dict['advanced']['window_size']
     if len(window_size) > 0:
-        if "," in window_size:
-            size_array = window_size.split(",")
+        if ',' in window_size:
+            size_array = window_size.split(',')
             target_width = int(size_array[0])
-            target_left = target_width * launch_counter
+            target_left = target_width * bot_launched_count
             # print("target_left:", target_left)
             if target_left >= 1440:
-                launch_counter = 0
-            window_size = window_size + "," + str(launch_counter)
+                bot_launched_count = 0
+            window_size = window_size + ',' + str(bot_launched_count)
             # print("window_size:", window_size)
 
     threading.Thread(
-        target=util.launch_maxbot,
-        args=(script_name, "", "", "", "", window_size,)
+        target=launch_maxbot_main_script_in_subprocess,
+        name='bot-main-script-launcher-thread',
+        kwargs={
+            'script_name': script_name,
+            'filename': '',
+            'homepage': '',
+            'kktix_account': '',
+            'kktix_password': '',
+            'window_size': window_size,
+            'headless': '',
+            'logger': logger
+        },
     ).start()
 
-    msg = f"finish doing launch_maxbot()"
-    logger.debug(msg)
+    msg = f"start bot-main-script-launcher-thread with script_name: {script_name}, window_size: {window_size}"
+    logger.info(msg)
+
+    msg = f"finish doing launch_maxbot()\n"
+    logger.info(msg)
 
 
 def clean_extension_status():
@@ -473,14 +498,16 @@ class ResumeHandler(tornado.web.RequestHandler):
 
 class RunHandler(tornado.web.RequestHandler):
     def get(self):
-        print('[*INFO*] - run button pressed.')
+        msg = f"received GET request from RunHandler"
+        logger.info(msg)
+
         launch_maxbot()
         self.write({"run": True})
 
 
 class LoadJsonHandler(tornado.web.RequestHandler):
     def get(self):
-        msg = f"received request from LoadJsonHandler"
+        msg = f"received GET request from LoadJsonHandler"
         logger.debug(msg)
 
         config_filepath, config_dict = _load_settings_from_local_json_file()
@@ -497,6 +524,9 @@ class ResetJsonHandler(tornado.web.RequestHandler):
 
 class SaveJsonHandler(tornado.web.RequestHandler):
     def post(self):
+        msg = f"received POST request from SaveJsonHandler"
+        logger.debug(msg)
+
         _body = None
         is_pass_check = True
         error_message = ""
@@ -747,6 +777,8 @@ def settings_gui_timer():
 if __name__ == "__main__":
     global GLOBAL_SERVER_SHUTDOWN
     GLOBAL_SERVER_SHUTDOWN = False
+
+    bot_launched_count = 0
 
     start_thread_in_daemon = True
     threading.Thread(

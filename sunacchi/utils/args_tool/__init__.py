@@ -2,9 +2,8 @@
 """
 Author: Jet C.
 GitHub: https://github.com/jet-c-21
-Create Date: 10/10/24
+Create Date: 10/22/24
 """
-
 from .general import (
-    wait_countdown
+    view_args
 )

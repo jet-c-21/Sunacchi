@@ -225,6 +225,14 @@ function maxbot_load_api() {
 
 maxbot_load_api();
 
+function run_message(msg) {
+    clearTimeout(runMessageClearTimer);
+    const message = document.querySelector('#run_btn_pressed_message');
+    message.innerText = msg;
+    messageClearTimer = setTimeout(function () {
+        message.innerText = '';
+    }, 3000);
+}
 
 function maxbot_reset_api() {
     let api_url = "http://127.0.0.1:16888/reset";
@@ -246,6 +254,11 @@ function maxbot_reset_api() {
             //alert( "finished" );
         });
 }
+
+function do_maxbot_settings_reset() {
+    maxbot_reset_api();
+}
+
 
 function checkUsePublicServer() {
     if (ocr_captcha_enable.checked) {
@@ -271,7 +284,7 @@ function message_old(msg) {
     }, 3000);
 }
 
-function maxbot_launch() {
+function do_maxbot_launch() {
     run_message("啟動 MaxBot 主程式中...");
     save_changes_to_dict(true);
     maxbot_save_api(maxbot_run_api());
@@ -310,6 +323,10 @@ function maxbot_shutdown_api() {
         });
 }
 
+function do_maxbot_shutdown() {
+    maxbot_shutdown_api();
+}
+
 function save_changes_to_dict(silent_flag) {
     const ticket_number_value = parseInt(ticket_number.value);
     //console.log(ticket_number_value);
@@ -325,10 +342,10 @@ function save_changes_to_dict(silent_flag) {
             settings.date_auto_select.mode = date_select_mode.value;
 
             let date_keyword_string = date_keyword.value;
-            if (date_keyword_string.indexOf('"') == -1) {
+            if (date_keyword_string.indexOf('"') === -1) {
                 date_keyword_string = '"' + date_keyword_string + '"';
             }
-            if (date_keyword_string == '""') {
+            if (date_keyword_string === '""') {
                 date_keyword_string = '';
             }
             settings.date_auto_select.date_keyword = date_keyword_string;
@@ -336,10 +353,10 @@ function save_changes_to_dict(silent_flag) {
             settings.area_auto_select.mode = area_select_mode.value;
 
             let area_keyword_string = area_keyword.value;
-            if (area_keyword_string.indexOf('"') == -1) {
+            if (area_keyword_string.indexOf('"') === -1) {
                 area_keyword_string = '"' + area_keyword_string + '"';
             }
-            if (area_keyword_string == '""') {
+            if (area_keyword_string === '""') {
                 area_keyword_string = '';
             }
             settings.area_auto_select.area_keyword = area_keyword_string;
@@ -388,10 +405,10 @@ function save_changes_to_dict(silent_flag) {
 
             // dictionary
             let user_guess_string_string = user_guess_string.value;
-            if (user_guess_string_string.indexOf('"') == -1) {
+            if (user_guess_string_string.indexOf('"') === -1) {
                 user_guess_string_string = '"' + user_guess_string_string + '"';
             }
-            if (user_guess_string_string == '""') {
+            if (user_guess_string_string === '""') {
                 user_guess_string_string = '';
             }
             settings.advanced.user_guess_string = user_guess_string_string;
@@ -454,6 +471,12 @@ function maxbot_save_api(callback) {
     }
 }
 
+function do_maxbot_settings_save() {
+    save_changes_to_dict(false);
+    maxbot_save_api();
+}
+
+
 function maxbot_pause_api() {
     let api_url = "http://127.0.0.1:16888/pause";
     if (settings) {
@@ -470,6 +493,10 @@ function maxbot_pause_api() {
                 //alert( "finished" );
             });
     }
+}
+
+function do_maxbot_pause() {
+    maxbot_pause_api();
 }
 
 function maxbot_resume_api() {
@@ -490,10 +517,10 @@ function maxbot_resume_api() {
     }
 }
 
-function maxbot_save() {
-    save_changes_to_dict(false);
-    maxbot_save_api();
+function do_maxbot_resume() {
+    maxbot_resume_api();
 }
+
 
 function check_unsaved_fields() {
     if (settings) {
@@ -657,12 +684,12 @@ var status_interval = setInterval(() => {
 
 maxbot_version_api();
 
-run_button.addEventListener('click', maxbot_launch);
-save_button.addEventListener('click', maxbot_save);
-reset_button.addEventListener('click', maxbot_reset_api);
-exit_button.addEventListener('click', maxbot_shutdown_api);
-pause_button.addEventListener('click', maxbot_pause_api);
-resume_button.addEventListener('click', maxbot_resume_api);
+run_button.addEventListener('click', do_maxbot_launch);
+save_button.addEventListener('click', do_maxbot_settings_save);
+reset_button.addEventListener('click', do_maxbot_settings_reset);
+exit_button.addEventListener('click', do_maxbot_shutdown);
+pause_button.addEventListener('click', do_maxbot_pause);
+resume_button.addEventListener('click', do_maxbot_resume);
 ocr_captcha_use_public_server.addEventListener('change', checkUsePublicServer);
 
 const onchange_tag_list = ["input", "select", "textarea"];
@@ -678,14 +705,6 @@ homepage.addEventListener('keyup', check_unsaved_fields);
 
 let runMessageClearTimer;
 
-function run_message(msg) {
-    clearTimeout(runMessageClearTimer);
-    const message = document.querySelector('#run_btn_pressed_message');
-    message.innerText = msg;
-    messageClearTimer = setTimeout(function () {
-        message.innerText = '';
-    }, 3000);
-}
 
 function home_tab_clicked() {
     console.log("clicked");

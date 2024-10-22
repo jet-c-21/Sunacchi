@@ -16,10 +16,9 @@ print(f"[INFO] - append directory to path: {PROJECT_DIR}")
 
 
 from util import (
-    get_curr_process_work_root_dir
+    launch_maxbot
 )
 
 
 if __name__ == '__main__':
-    x = get_curr_process_work_root_dir()
-    print(x)
+    launch_maxbot()

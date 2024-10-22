@@ -26,14 +26,24 @@ import webbrowser
 
 import util
 
+import sunacchi
 from sunacchi.utils import (
     system_tool
 )
 
 from sunacchi.utils.file_tool import (
+    create_dir,
     to_json,
     read_json,
     create_file_from_template
+)
+
+from sunacchi.utils.log_tool import (
+    create_logger
+)
+
+from sunacchi.bot import (
+    launch_maxbot_main_script_in_subprocess
 )
 
 THIS_FILE_PATH = pathlib.Path(__file__).absolute()
@@ -41,15 +51,23 @@ THIS_FILE_PARENT_DIR = THIS_FILE_PATH.parent
 PROJECT_DIR = THIS_FILE_PARENT_DIR
 
 SETTINGS_TEMPLATES_DIR = PROJECT_DIR / 'settings-templates'
+SETTINGS_TPL_FILE = SETTINGS_TEMPLATES_DIR / 'settings.json'
 
-CONST_APP_VERSION = "MaxBot (2024.04.23)"
+LOG_DIR = PROJECT_DIR / 'logs'
+create_dir(LOG_DIR)
+
+# global logger
+logger_name = f"{THIS_FILE_PATH.stem}"
+log_path = LOG_DIR / f"{logger_name}.log"
+logger = create_logger(logger_name, log_path=log_path)
+
+# >>> >>> const variables >>> >>>
+CONST_APP_VERSION = f"Sunacchi - v{sunacchi.__version__}"
 
 CONST_MAXBOT_LAUNCHER_SETTINGS_FILE_NAME = "config_launcher.json"
 CONST_MAXBOT_LAUNCHER_TPL_SETTINGS_FILE = SETTINGS_TEMPLATES_DIR / CONST_MAXBOT_LAUNCHER_SETTINGS_FILE_NAME
 
 CONST_MAXBOT_CONFIG_FILE = "settings.json"
-
-translate = dict()
 
 URL_DONATE = 'https://max-everyday.com/about/#donate'
 URL_HELP = 'https://max-everyday.com/2018/08/max-auto-reg-bot/'
@@ -59,6 +77,9 @@ URL_CHROME_DRIVER = 'https://chromedriver.chromium.org/'
 URL_FIREFOX_DRIVER = 'https://github.com/mozilla/geckodriver/releases'
 URL_EDGE_DRIVER = 'https://developer.microsoft.com/zh-tw/microsoft-edge/tools/webdriver/'
 
+# <<< <<< const variables <<< <<<
+
+translate = dict()
 
 def load_translate() -> Dict:
     translate_dict = {
@@ -322,7 +343,13 @@ def btn_items_run_event(event):
     if "widgets" in globals():
         filename = widgets['txt_file_name_value'][btn_index - 1].get().strip()
         script_name = "chrome_tixcraft"
-        threading.Thread(target=util.launch_maxbot, args=(script_name, filename,)).start()
+        threading.Thread(
+            target=launch_maxbot_main_script_in_subprocess,
+            kwargs={
+              'script_name': script_name,
+              'filename': filename,
+            },
+        ).start()
 
 
 def ConfigListTab(root, config_dict, language_code, UI_PADDING_X):

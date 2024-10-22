@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 # encoding=utf-8
+from typing import Dict, List, Optional, Union
+from argparse import Namespace
+import asyncio
 import argparse
 import base64
 import json
@@ -10,6 +13,7 @@ import platform
 import random
 import ssl
 import subprocess
+from pprint import pp
 import sys
 import threading
 import time
@@ -19,6 +23,7 @@ from datetime import datetime
 
 import nodriver as uc
 from nodriver import cdp
+from nodriver import Tab
 from nodriver.core.config import Config
 from urllib3.exceptions import InsecureRequestWarning
 import urllib.parse
@@ -32,10 +37,16 @@ except Exception as exc:
     print(exc)
     pass
 
+import sunacchi
 from sunacchi import var as VAR
 
 from sunacchi.utils import (
-    system_tool
+    system_tool,
+    wait_countdown,
+)
+
+from sunacchi.bot import (
+    launch_maxbot_main_script_in_subprocess
 )
 
 from sunacchi.browser_ext.maxbot_plus import (
@@ -46,10 +57,42 @@ from sunacchi.browser_ext.maxblock_plus import (
     dump_settings_to_maxblock_plus_extension
 )
 
-CONST_APP_VERSION = "MaxBot (2024.04.23)"
+from sunacchi.utils.file_tool import (
+    create_dir,
+    create_file_from_template,
+    read_json,
+    to_json
+)
+
+from sunacchi.utils.log_tool import (
+    create_logger
+)
+
+from sunacchi.utils.args_tool import (
+    view_args
+)
+
+THIS_FILE_PATH = pathlib.Path(__file__).absolute()
+THIS_FILE_PARENT_DIR = THIS_FILE_PATH.parent
+PROJECT_DIR = THIS_FILE_PARENT_DIR
+
+SETTINGS_TEMPLATES_DIR = PROJECT_DIR / 'settings-templates'
+SETTINGS_TPL_FILE = SETTINGS_TEMPLATES_DIR / 'settings.json'
+
+LOG_DIR = PROJECT_DIR / 'logs'
+create_dir(LOG_DIR)
+
+# global logger
+logger_name = f"{THIS_FILE_PATH.stem}"
+log_path = LOG_DIR / f"{logger_name}.log"
+logger = create_logger(logger_name, log_path=log_path)
+
+# >>> >>> const variables >>> >>>
+CONST_APP_VERSION = f"Sunacchi - v{sunacchi.__version__}"
 
 CONST_MAXBOT_ANSWER_ONLINE_FILE = "MAXBOT_ONLINE_ANSWER.txt"
 CONST_MAXBOT_CONFIG_FILE_NAME = "settings.json"
+CONST_MAXBOT_CONFIG_FILE = PROJECT_DIR / CONST_MAXBOT_CONFIG_FILE_NAME
 CONST_MAXBOT_EXTENSION_NAME = "Maxbotplus_1.0.0"
 CONST_MAXBOT_INT28_FILE = "MAXBOT_INT28_IDLE.txt"
 CONST_MAXBOT_LAST_URL_FILE = "MAXBOT_LAST_URL.txt"
@@ -81,57 +124,56 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 
 warnings.simplefilter('ignore', InsecureRequestWarning)
 ssl._create_default_https_context = ssl._create_unverified_context
-logging.basicConfig()
-logger = logging.getLogger('logger')
 
 
-def get_config_dict(args):
-    app_root = system_tool.get_curr_process_work_root_dir()
-    config_filepath = os.path.join(app_root, CONST_MAXBOT_CONFIG_FILE_NAME)
+# <<< <<< const variables <<< <<<
+
+def get_config_dict(args: Namespace) -> Dict:
+    _curr_work_root_dir = system_tool.get_curr_process_work_root_dir()
 
     # allow assign config by command line.
     if args.input and len(args.input) > 0:
-        config_filepath = args.input
+        config_filepath = _curr_work_root_dir / args.input
+    else:
+        config_filepath = CONST_MAXBOT_CONFIG_FILE
 
     config_dict = None
     if os.path.isfile(config_filepath):
-        # start to overwrite config settings.
-        with open(config_filepath) as json_data:
-            config_dict = json.load(json_data)
+        config_dict = read_json(config_filepath)
 
-            # Define a dictionary to map argument names to their paths in the config_dict
-            arg_to_path = {
-                "headless": ["advanced", "headless"],
-                "homepage": ["homepage"],
-                "ticket_number": ["ticket_number"],
-                "browser": ["browser"],
-                "tixcraft_sid": ["advanced", "tixcraft_sid"],
-                "ibonqware": ["advanced", "ibonqware"],
-                "kktix_account": ["advanced", "kktix_account"],
-                "kktix_password": ["advanced", "kktix_password_plaintext"],
-                "proxy_server": ["advanced", "proxy_server_port"],
-                "window_size": ["advanced", "window_size"]
-            }
+        # Define a dictionary to map argument names to their paths in the config_dict
+        arg_name_to_path = {
+            "headless": ["advanced", "headless"],
+            "homepage": ["homepage"],
+            "ticket_number": ["ticket_number"],
+            "browser": ["browser"],
+            "tixcraft_sid": ["advanced", "tixcraft_sid"],
+            "ibonqware": ["advanced", "ibonqware"],
+            "kktix_account": ["advanced", "kktix_account"],
+            "kktix_password": ["advanced", "kktix_password_plaintext"],
+            "proxy_server": ["advanced", "proxy_server_port"],
+            "window_size": ["advanced", "window_size"]
+        }
 
-            # Update the config_dict based on the arguments
-            for arg, path in arg_to_path.items():
-                value = getattr(args, arg)
-                if value and len(str(value)) > 0:
-                    d = config_dict
-                    for key in path[:-1]:
-                        d = d[key]
-                    d[path[-1]] = value
+        # Update the config_dict based on input args
+        for arg_name, path in arg_name_to_path.items():
+            value = getattr(args, arg_name)
+            if value and len(str(value)) > 0:
+                d = config_dict  # alias
+                for key in path[:-1]:  # all elements except the last one
+                    d = d[key]
+                d[path[-1]] = value
 
-            # special case for headless to enable away from keyboard mode.
-            is_headless_enable_ocr = False
-            if config_dict["advanced"]["headless"]:
-                # for tixcraft headless.
-                if len(config_dict["advanced"]["tixcraft_sid"]) > 1:
-                    is_headless_enable_ocr = True
+        # special case for headless to enable away from keyboard mode.
+        is_headless_enable_ocr = False
+        if config_dict["advanced"]["headless"]:
+            # for tixcraft headless.
+            if len(config_dict["advanced"]["tixcraft_sid"]) > 1:
+                is_headless_enable_ocr = True
 
-            if is_headless_enable_ocr:
-                config_dict["ocr_captcha"]["enable"] = True
-                config_dict["ocr_captcha"]["force_submit"] = True
+        if is_headless_enable_ocr:
+            config_dict["ocr_captcha"]["enable"] = True
+            config_dict["ocr_captcha"]["force_submit"] = True
 
     return config_dict
 
@@ -174,9 +216,6 @@ async def nodriver_press_button(tab, select_query):
             # print("click fail for selector:", select_query)
             print(e)
             pass
-
-
-from typing import Optional
 
 
 async def nodriver_check_checkbox(tab: Optional[object], select_query: str, value: str = 'true') -> bool:
@@ -294,9 +333,11 @@ async def nodriver_goto_homepage(driver, config_dict):
     try:
         tab = await driver.get(homepage)
         await tab.get_content()
-        time.sleep(3)
+        wait_countdown(300, descr=f"check if can access homepage")
     except Exception as e:
         pass
+
+    print('@@@@@@@@@@@@@@@@@@@@@@@')
 
     tixcraft_family = False
     if 'tixcraft.com' in homepage:
@@ -312,16 +353,29 @@ async def nodriver_goto_homepage(driver, config_dict):
         tixcraft_sid = config_dict["advanced"]["tixcraft_sid"]
         if len(tixcraft_sid) > 1:
             cookies = await driver.cookies.get_all()
-            is_cookie_exist = False
-            for cookie in cookies:
-                if cookie.name == 'SID':
-                    cookie.value = tixcraft_sid
-                    is_cookie_exist = True
+            tixcraft_sid_cookie_key_existed = False
+            for _cookie in cookies:
+                if _cookie.name == 'SID':
+                    tixcraft_sid_cookie_key_existed = True
+                    _cookie.value = tixcraft_sid
+                    msg = f"tixcraft sid cookie key existed, overwrite with: {tixcraft_sid}"
+                    logger.info(msg)
                     break
-            if not is_cookie_exist:
-                new_cookie = cdp.network.CookieParam("SID", tixcraft_sid, domain="tixcraft.com", path="/",
-                                                     http_only=True, secure=True)
+
+            if not tixcraft_sid_cookie_key_existed:
+                new_cookie = cdp.network.CookieParam(
+                    'SID',
+                    tixcraft_sid,
+                    domain="tixcraft.com",
+                    path="/",
+                    http_only=True,
+                    secure=True
+                )
                 cookies.append(new_cookie)
+
+                msg = f"tixcraft sid cookie key is not existed, add new cookie:\n{new_cookie}"
+                logger.info(msg)
+
             await driver.cookies.set_all(cookies)
 
     if 'ibon.com' in homepage:
@@ -956,8 +1010,19 @@ async def nodriver_kktix_main(tab, url, config_dict):
                     if config_dict["webdriver_type"] == CONST_WEBDRIVER_TYPE_NODRIVER:
                         script_name = "nodriver_tixcraft"
 
-                    threading.Thread(target=util.launch_maxbot,
-                                     args=(script_name, "", url, kktix_account, kktix_password, "", "false",)).start()
+                    threading.Thread(
+                        target=launch_maxbot_main_script_in_subprocess,
+                        kwargs={
+                            'script_name': script_name,
+                            'filename': '',
+                            'homepage': url,
+                            'kktix_account': kktix_account,
+                            'kktix_password': kktix_password,
+                            'window_size': '',
+                            'headless': 'false',
+                            'logger': logger
+                        }
+                    ).start()
                     # driver.quit()
                     # sys.exit()
 
@@ -1932,7 +1997,7 @@ async def nodriver_facebook_main(tab, config_dict):
         await nodriver_facebook_login(tab, facebook_account, facebook_password)
 
 
-def get_nodriver_browser_args():
+def get_nodriver_browser_args() -> List[str]:
     browser_args = [
         f"--user-agent={USER_AGENT}",
         "--disable-2d-canvas-clip-aa",
@@ -2008,7 +2073,7 @@ def get_extension_config(config_dict):
     default_lang = "zh-TW"
     browser_args = get_nodriver_browser_args()
     if len(config_dict["advanced"]["proxy_server_port"]) > 2:
-        browser_args.append('--proxy-server=%s' % config_dict["advanced"]["proxy_server_port"])
+        browser_args.append(f"--proxy-server={config_dict['advanced']['proxy_server_port']}")
 
     sandbox = False
     conf = Config(
@@ -2154,7 +2219,8 @@ def nodriver_overwrite_prefs(conf):
     prefs_dict = {
         "credentials_enable_service": False,
         "ack_existing_ntp_extensions": False,
-        "translate": {"enabled": False}}
+        "translate": {"enabled": False}
+    }
     prefs_dict["in_product_help"] = {}
     prefs_dict["in_product_help"]["snoozed_feature"] = {}
     prefs_dict["in_product_help"]["snoozed_feature"]["IPH_LiveCaption"] = {}
@@ -2221,31 +2287,43 @@ async def check_refresh_datetime_occur(tab, target_time):
     return is_refresh_datetime_sent
 
 
-async def main(args):
-    config_dict = get_config_dict(args)
+async def main(args: Union[Namespace, Dict]):
+    if isinstance(args, Namespace):
+        config_dict = get_config_dict(args)
+    elif isinstance(args, dict):
+        config_dict = args
+    else:
+        raise TypeError("args must be Namespace or dict")
 
     driver = None
     tab = None
-    if not config_dict is None:
+    if config_dict is not None:
         sandbox = False
         conf = get_extension_config(config_dict)
         nodriver_overwrite_prefs(conf)
-        # PS: nodrirver run twice always cause error:
-        # Failed to connect to browser
-        # One of the causes could be when you are running as root.
-        # In that case you need to pass no_sandbox=True
-        # driver = await uc.start(conf, sandbox=sandbox, headless=config_dict["advanced"]["headless"])
+        '''
+        PS: nodrirver run twice always cause error:
+        Failed to connect to browser
+        One of the causes could be when you are running as root.
+        In that case you need to pass no_sandbox=True
+        
+        driver = await uc.start(conf, sandbox=sandbox, headless=config_dict["advanced"]["headless"])
+        '''
+
         driver = await uc.start(conf)
-        if not driver is None:
+        if driver is not None:
             tab = await nodriver_goto_homepage(driver, config_dict)
+            print('***************************************')
             tab = await nodrver_block_urls(tab, config_dict)
             if not config_dict["advanced"]["headless"]:
                 await nodriver_resize_window(tab, config_dict)
         else:
-            print("無法使用nodriver，程式無法繼續工作")
+            msg = f"failed to use nodriver, force to terminate program"
+            logger.warning(msg)
             sys.exit()
     else:
-        print("Load config error!")
+        msg = f"failed to load config in normal way"
+        logger.warning(msg)
 
     url = ""
     last_url = ""
@@ -2442,6 +2520,9 @@ def cli():
                         type=str)
 
     args = parser.parse_args()
+
+    view_args(args)
+
     uc.loop().run_until_complete(main(args))
 
 

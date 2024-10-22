@@ -57,10 +57,20 @@ from sunacchi.browser_ext.maxblock_plus import (
     dump_settings_to_maxblock_plus_extension
 )
 
+import sunacchi
 from sunacchi import var as VAR
+from sunacchi.utils.file_tool import (
+    create_dir,
+)
+from sunacchi.utils.log_tool import (
+    create_logger,
+)
 from sunacchi.utils import (
     file_tool,
     system_tool
+)
+from sunacchi.bot import (
+    launch_maxbot_main_script_in_subprocess
 )
 
 THIS_FILE_PATH = pathlib.Path(__file__).absolute()
@@ -68,10 +78,21 @@ THIS_FILE_PARENT_DIR = THIS_FILE_PATH.parent
 PROJECT_DIR = THIS_FILE_PARENT_DIR
 
 SETTINGS_TEMPLATES_DIR = PROJECT_DIR / 'settings-templates'
+SETTINGS_TPL_FILE = SETTINGS_TEMPLATES_DIR / 'settings.json'
+
 BROWSER_EXT_SETTINGS_TEMPLATES_DIR = SETTINGS_TEMPLATES_DIR / 'browser_extensions'
 WEBDRIVER_DIR = PROJECT_DIR / 'webdriver'
 
-CONST_APP_VERSION = "MaxBot (2024.04.23)"
+LOG_DIR = PROJECT_DIR / 'logs'
+create_dir(LOG_DIR)
+
+# global logger
+logger_name = f"{THIS_FILE_PATH.stem}"
+log_path = LOG_DIR / f"{logger_name}.log"
+logger = create_logger(logger_name, log_path=log_path)
+
+# >>> >>> const variables >>> >>>
+CONST_APP_VERSION = f"Sunacchi - v{sunacchi.__version__}"
 
 CONST_MAXBOT_ANSWER_ONLINE_FILE = "MAXBOT_ONLINE_ANSWER.txt"
 CONST_MAXBOT_CONFIG_FILE_NAME = "settings.json"
@@ -133,9 +154,9 @@ CONST_PREFS_DICT = {
 
 warnings.simplefilter('ignore', InsecureRequestWarning)
 ssl._create_default_https_context = ssl._create_unverified_context
-logging.basicConfig()
-logger = logging.getLogger('logger')
 
+
+# <<< <<< const variables <<< <<<
 
 def get_config_dict(args):
     app_root = system_tool.get_curr_process_work_root_dir()
@@ -184,7 +205,7 @@ def get_config_dict(args):
             is_headless_enable_ocr = False
             if config_dict["advanced"]["headless"]:
                 # for tixcraft headless.
-                # print("If you are runnig headless mode on tixcraft, you need input your cookie SID.")
+                # print("If you are running headless mode on tixcraft, you need input your cookie SID.")
                 if len(config_dict["advanced"]["tixcraft_sid"]) > 1:
                     is_headless_enable_ocr = True
 
@@ -623,40 +644,35 @@ def _get_chrome_driver_by_config(config_dict: Dict):
 def get_driver_by_config(config_dict: Dict):
     driver = None
 
-    # read config.
-    homepage = config_dict["homepage"]
+    msg = f"maxbot app version: {CONST_APP_VERSION}"
+    logger.debug(msg)
 
-    # log config:
-    msg = f"[*INFO*] - current time: {get_curr_datetime_str()}"
-    print(msg)
-    msg = f"[*INFO*] - maxbot app version: {CONST_APP_VERSION}"
-    print(msg)
-    msg = f"[*INFO*] - python version: {platform.python_version()}"
-    print(msg)
-    msg = f"[*INFO*] - platform: {platform.platform()}"
-    print(msg)
-    msg = f"[*INFO*] - target homepage: {homepage}"
-    print(msg)
-    msg = f"[*INFO*] - confing browser: {config_dict['browser']}"
-    print(msg)
-    msg = f"[*INFO*] - headless mode: {config_dict['advanced']['headless']}"
-    print(msg)
+    msg = f"platform: {platform.platform()}"
+    logger.debug(msg)
 
-    # print("ticket_number:", str(config_dict["ticket_number"]))
+    msg = f"platform.python_version: {platform.python_version()}"
+    logger.debug(msg)
 
-    # print(config_dict["tixcraft"])
-    # print("==[advanced config]==")
+    msg = f"config browser: {config_dict['browser']}"
+    logger.debug(msg)
+
+    msg = f"webdriver_type: {config_dict['webdriver_type']}"
+    logger.debug(msg)
+
+    msg = f"headless mode: {config_dict['advanced']['headless']}"
+    logger.debug(msg)
+
     if config_dict["advanced"]["verbose"]:
-        print(f"[*INFO*] - advanced config:")
-        print(config_dict["advanced"])
-        print()
+        msg = f"advanced config:\n{config_dict['advanced']}\n"
+        logger.debug(msg)
 
-    msg = f"[*INFO*] - webdriver_type: {config_dict['webdriver_type']}"
-    print(msg)
+    _target_homepage = config_dict["homepage"]
+    msg = f"target homepage: {_target_homepage}"
+    logger.info(msg)
 
     # entry point
-    if homepage is None:
-        homepage = ""
+    if _target_homepage is None:
+        _target_homepage = ""
 
     _work_root_dir = system_tool.get_curr_process_work_root_dir()
     # webdriver_dir = os.path.join(_work_root_dir, "webdriver")
@@ -814,57 +830,57 @@ def get_driver_by_config(config_dict: Dict):
                 driver.execute_cdp_cmd('Network.setBlockedURLs', {"urls": NETWORK_BLOCKED_URLS})
                 driver.execute_cdp_cmd('Network.enable', {})
 
-            if 'kktix.c' in homepage:
+            if 'kktix.c' in _target_homepage:
                 if len(config_dict["advanced"]["kktix_account"]) > 0:
                     # for like human.
                     try:
-                        driver.get(homepage)
+                        driver.get(_target_homepage)
                         time.sleep(5)
                     except Exception as e:
                         pass
-                    if not 'https://kktix.com/users/sign_in?' in homepage:
-                        homepage = CONST_KKTIX_SIGN_IN_URL % (homepage)
+                    if not 'https://kktix.com/users/sign_in?' in _target_homepage:
+                        _target_homepage = CONST_KKTIX_SIGN_IN_URL % (_target_homepage)
 
-            if 'famiticket.com' in homepage:
+            if 'famiticket.com' in _target_homepage:
                 if len(config_dict["advanced"]["fami_account"]) > 0:
-                    homepage = CONST_FAMI_SIGN_IN_URL
+                    _target_homepage = CONST_FAMI_SIGN_IN_URL
 
-            if 'kham.com' in homepage:
+            if 'kham.com' in _target_homepage:
                 if len(config_dict["advanced"]["kham_account"]) > 0:
-                    homepage = CONST_KHAM_SIGN_IN_URL
+                    _target_homepage = CONST_KHAM_SIGN_IN_URL
 
-            if 'ticket.com.tw' in homepage:
+            if 'ticket.com.tw' in _target_homepage:
                 if len(config_dict["advanced"]["ticket_account"]) > 0:
-                    homepage = CONST_TICKET_SIGN_IN_URL
+                    _target_homepage = CONST_TICKET_SIGN_IN_URL
 
-            if 'urbtix.hk' in homepage:
+            if 'urbtix.hk' in _target_homepage:
                 if len(config_dict["advanced"]["urbtix_account"]) > 0:
-                    homepage = CONST_URBTIX_SIGN_IN_URL
+                    _target_homepage = CONST_URBTIX_SIGN_IN_URL
 
-            if 'cityline.com' in homepage:
+            if 'cityline.com' in _target_homepage:
                 if len(config_dict["advanced"]["cityline_account"]) > 0:
-                    homepage = CONST_CITYLINE_SIGN_IN_URL
+                    _target_homepage = CONST_CITYLINE_SIGN_IN_URL
 
-            if 'hkticketing.com' in homepage:
+            if 'hkticketing.com' in _target_homepage:
                 if len(config_dict["advanced"]["hkticketing_account"]) > 0:
-                    homepage = CONST_HKTICKETING_SIGN_IN_URL
+                    _target_homepage = CONST_HKTICKETING_SIGN_IN_URL
 
-            if 'ticketplus.com.tw' in homepage:
+            if 'ticketplus.com.tw' in _target_homepage:
                 if len(config_dict["advanced"]["ticketplus_account"]) > 1:
-                    homepage = "https://ticketplus.com.tw/"
+                    _target_homepage = "https://ticketplus.com.tw/"
 
-            print("goto url:", homepage)
-            driver.get(homepage)
+            print("goto url:", _target_homepage)
+            driver.get(_target_homepage)
             time.sleep(3.0)
 
             tixcraft_family = False
-            if 'tixcraft.com' in homepage:
+            if 'tixcraft.com' in _target_homepage:
                 tixcraft_family = True
 
-            if 'indievox.com' in homepage:
+            if 'indievox.com' in _target_homepage:
                 tixcraft_family = True
 
-            if 'ticketmaster.' in homepage:
+            if 'ticketmaster.' in _target_homepage:
                 tixcraft_family = True
 
             if tixcraft_family:
@@ -873,7 +889,7 @@ def get_driver_by_config(config_dict: Dict):
                     driver.delete_cookie("SID")
                     driver.add_cookie({"name": "SID", "value": tixcraft_sid, "path": "/", "secure": True})
 
-            if 'ibon.com' in homepage:
+            if 'ibon.com' in _target_homepage:
                 ibonqware = config_dict["advanced"]["ibonqware"]
                 if len(ibonqware) > 1:
                     driver.delete_cookie("ibonqware")
@@ -6348,8 +6364,19 @@ def kktix_main(driver, url, config_dict):
                     script_name = "chrome_tixcraft"
                     if config_dict["webdriver_type"] == CONST_WEBDRIVER_TYPE_NODRIVER:
                         script_name = "nodriver_tixcraft"
-                    threading.Thread(target=util.launch_maxbot,
-                                     args=(script_name, "", url, kktix_account, kktix_password, "", "false",)).start()
+                    threading.Thread(
+                        target=launch_maxbot_main_script_in_subprocess,
+                        kwargs={
+                            'script_name': script_name,
+                            'filename': '',
+                            'homepage': url,
+                            'kktix_account': kktix_account,
+                            'kktix_password': kktix_password,
+                            'window_size': '',
+                            'headless': 'false',
+                            'logger': logger,
+                        }
+                    ).start()
 
                 is_event_page = False
                 if len(url.split('/')) >= 7:
