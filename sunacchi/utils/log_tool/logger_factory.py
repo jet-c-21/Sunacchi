@@ -79,22 +79,22 @@ console_handler = ConsoleHandler()
 LOGGER_DICT = dict()
 
 
-def create_logger(name,
+def create_logger(logger_name,
                   log_lv=logging.DEBUG,
                   log_path: Union[pathlib.Path, str, None] = 'default',
                   mute_logger=False,
                   max_save_mb=5,
                   backup_count=0,
                   verbose=False) -> PrettyLogger:
-    if name in LOGGER_DICT:
-        return LOGGER_DICT[name]
+    if logger_name in LOGGER_DICT:
+        return LOGGER_DICT[logger_name]
 
     if verbose:
         rich_printer = RichPrinter()
     else:
         rich_printer = None
 
-    logger = logging.getLogger(name)
+    logger = logging.getLogger(logger_name)
     logger.setLevel(log_lv)
 
     msg = f"new logger name: {logger.name}, LEVEL: {logging.getLevelName(logger.level)} ({logger.level})"
@@ -136,7 +136,7 @@ def create_logger(name,
         file_handler.setLevel(log_lv)
         logger.addHandler(file_handler)
 
-        msg = f"<{name}>'s log file = {file_handler.baseFilename}"
+        msg = f"<{logger_name}>'s log file = {file_handler.baseFilename}"
         if not mute_logger:
             if verbose:
                 rich_printer(msg)

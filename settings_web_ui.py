@@ -17,6 +17,8 @@ import tornado
 from tornado.web import Application
 from tornado.web import StaticFileHandler
 
+import sunacchi
+
 from sunacchi.utils import (
     system_tool,
     network_tool,
@@ -46,6 +48,9 @@ try:
 except Exception as exc:
     pass
 
+from sunacchi.utils.log_tool import create_logger
+from sunacchi.utils.file_tool import create_dir
+
 THIS_FILE_PATH = pathlib.Path(__file__).absolute()
 THIS_FILE_PARENT_DIR = THIS_FILE_PATH.parent
 PROJECT_DIR = THIS_FILE_PARENT_DIR
@@ -53,8 +58,16 @@ PROJECT_DIR = THIS_FILE_PARENT_DIR
 SETTINGS_TEMPLATES_DIR = PROJECT_DIR / 'settings-templates'
 SETTINGS_TPL_FILE = SETTINGS_TEMPLATES_DIR / 'settings.json'
 
+LOG_DIR = PROJECT_DIR / 'logs'
+create_dir(LOG_DIR)
+
+# global logger
+logger_name = f"{THIS_FILE_PATH.stem}"
+log_path = LOG_DIR / f"{logger_name}.log"
+logger = create_logger(logger_name, log_path=log_path)
+
 # >>>>>> const var >>>>>>
-CONST_APP_VERSION = "MaxBot (2024.04.23)"
+CONST_APP_VERSION = f"Sunacchi - v{sunacchi.__version__}"
 
 CONST_MAXBOT_ANSWER_ONLINE_FILE = "MAXBOT_ONLINE_ANSWER.txt"
 CONST_MAXBOT_CONFIG_FILE = PROJECT_DIR / 'settings.json'
@@ -242,26 +255,43 @@ def read_last_url_from_file() -> str:
     return text
 
 
-def load_json() -> Tuple[pathlib.Path, Dict]:
+def _load_settings_from_local_json_file(do_log=True) -> Tuple[pathlib.Path, Dict]:
     """
     load config dict from settings.json
     if the json is not existed it will create a new one from template
     """
-    config_filepath = CONST_MAXBOT_CONFIG_FILE
+    _config_json_file = CONST_MAXBOT_CONFIG_FILE
 
-    if not config_filepath.is_file():
-        config_filepath = file_tool.create_file_from_template(
-            config_filepath, SETTINGS_TPL_FILE
+    if do_log:
+        msg = f"config json file to load: {_config_json_file}"
+        logger.debug(msg)
+
+    if not _config_json_file.is_file():
+        _config_json_file = file_tool.create_file_from_template(
+            _config_json_file, SETTINGS_TPL_FILE
         )
+        msg = f"config json file is not existed,\n" \
+              f"created from template: {SETTINGS_TPL_FILE},\n" \
+              f"new config json file: {_config_json_file}"
+        logger.debug(msg)
 
-    config_dict = file_tool.read_json(config_filepath)
-    if config_dict is None:
-        config_dict = get_default_config()
+    _config_dict = file_tool.read_json(_config_json_file)
+    if _config_dict is None:
+        _config_dict = get_default_config()
+        msg = f"failed to read config json content from local file, get default config instead"
+        logger.warning(msg)
 
-    return config_filepath, config_dict
+    if do_log:
+        msg = f"loaded config dict key count: {len(_config_dict)}, json file path: {_config_json_file}"
+        logger.debug(msg)
+
+    return _config_json_file, _config_dict
 
 
-def reset_json():
+def _reset_local_settings_json_file() -> Tuple[pathlib.Path, Dict]:
+    msg = f"start doing _reset_local_settings_json_file() ..."
+    logger.debug(msg)
+
     config_filepath = CONST_MAXBOT_CONFIG_FILE
     if config_filepath.is_file():
         try:
@@ -270,7 +300,10 @@ def reset_json():
             msg = f"[*WARN*] - failed to deleted config file: {config_filepath}, Error: {e}"
             print(msg)
 
-    return load_json()
+    msg = f"finish doing _reset_local_settings_json_file()"
+    logger.debug(msg)
+
+    return _load_settings_from_local_json_file()
 
 
 def decrypt_password(config_dict):
@@ -319,13 +352,16 @@ def maxbot_resume():
 
 
 def launch_maxbot():
+    msg = f"start doing launch_maxbot() ..."
+    logger.debug(msg)
+
     global launch_counter
     if "launch_counter" in globals():
         launch_counter += 1
     else:
         launch_counter = 0
 
-    config_filepath, config_dict = load_json()
+    config_filepath, config_dict = _load_settings_from_local_json_file()
     config_dict = decrypt_password(config_dict)
 
     script_name = "chrome_tixcraft"
@@ -344,7 +380,13 @@ def launch_maxbot():
             window_size = window_size + "," + str(launch_counter)
             # print("window_size:", window_size)
 
-    threading.Thread(target=util.launch_maxbot, args=(script_name, "", "", "", "", window_size,)).start()
+    threading.Thread(
+        target=util.launch_maxbot,
+        args=(script_name, "", "", "", "", window_size,)
+    ).start()
+
+    msg = f"finish doing launch_maxbot()"
+    logger.debug(msg)
 
 
 def clean_extension_status():
@@ -438,14 +480,17 @@ class RunHandler(tornado.web.RequestHandler):
 
 class LoadJsonHandler(tornado.web.RequestHandler):
     def get(self):
-        config_filepath, config_dict = load_json()
+        msg = f"received request from LoadJsonHandler"
+        logger.debug(msg)
+
+        config_filepath, config_dict = _load_settings_from_local_json_file()
         config_dict = decrypt_password(config_dict)
         self.write(config_dict)
 
 
 class ResetJsonHandler(tornado.web.RequestHandler):
     def get(self):
-        config_filepath, config_dict = reset_json()
+        config_filepath, config_dict = _reset_local_settings_json_file()
         util.save_json(config_dict, config_filepath)
         self.write(config_dict)
 
@@ -568,12 +613,17 @@ class QueryHandler(tornado.web.RequestHandler):
 
 
 async def main_server():
+    msg = f"start running main_server() ..."
+    logger.info(msg)
+
     ocr = None
     try:
         ocr = ddddocr.DdddOcr(show_ad=False, beta=True)
-    except Exception as exc:
-        print(exc)
-        pass
+        msg = f"ddddocr ocr object loaded."
+        logger.info(msg)
+    except Exception as e:
+        msg = f"failed to load ddddocr ocr object, Error: {e}"
+        logger.exception(msg)
 
     app = Application(
         [
@@ -601,16 +651,24 @@ async def main_server():
     app.ocr = ocr
     app.version = CONST_APP_VERSION
 
+    msg = f"finish setting up api handlers"
+    logger.info(msg)
+
     app.listen(CONST_SERVER_PORT)
-    msg = f"[*INFO*] - server running on port: {CONST_SERVER_PORT}"
-    print(msg)
+    msg = f"server running on port: {CONST_SERVER_PORT}"
+    logger.info(msg)
 
     url = f"http://127.0.0.1:{CONST_SERVER_PORT}/settings.html"
 
-    msg = f"[*INFO*] - server url: {url}"
-    print(msg)
+    msg = f"server url: {url}"
+    logger.info(msg)
 
     webbrowser.open_new(url)
+    msg = f"opened homepage with user default browser"
+    logger.info(msg)
+
+    msg = f"🚀🚀🚀 finish running main_server() 🚀🚀🚀 start waiting for event"
+    logger.info(msg)
     await asyncio.Event().wait()
 
 
@@ -626,12 +684,20 @@ def launch_web_server():
         asyncio.run(main_server())
 
     else:
-        msg = f"[*WARN*] - port: {CONST_SERVER_PORT} on host: {host} is already in used"
+        msg = f"port: {CONST_SERVER_PORT} on host: {host} is already in used"
+        logger.warning(msg)
         raise RuntimeError(msg)
 
 
-def change_maxbot_status_by_keyword():
-    config_filepath, config_dict = load_json()
+def _change_maxbot_status_by_keyword(do_log=False):
+    """
+    this function will consistently be evoked by status-updating-thread
+    """
+    if do_log:
+        msg = f"start doing change_maxbot_status_by_keyword() ..."
+        logger.debug(msg)
+
+    config_filepath, config_dict = _load_settings_from_local_json_file(do_log=False)
 
     system_clock_data = datetime.now()
     current_time = system_clock_data.strftime('%H:%M:%S')
@@ -663,31 +729,38 @@ def change_maxbot_status_by_keyword():
             # print("match to resume:", current_time)
             maxbot_resume()
 
+    if do_log:
+        msg = f"finish doing change_maxbot_status_by_keyword()"
+        logger.debug(msg)
+
 
 def settings_gui_timer():
+    msg = f"gui timer is started"
+    logger.info(msg)
     while True:
-        change_maxbot_status_by_keyword()
+        _change_maxbot_status_by_keyword()
         time.sleep(0.4)
         if GLOBAL_SERVER_SHUTDOWN:
             break
 
 
 if __name__ == "__main__":
-    
-
     global GLOBAL_SERVER_SHUTDOWN
     GLOBAL_SERVER_SHUTDOWN = False
 
     start_thread_in_daemon = True
-    threading.Thread(target=settings_gui_timer, daemon=start_thread_in_daemon).start()
+    threading.Thread(
+        target=settings_gui_timer,
+        name='status-updating-thread',
+        daemon=start_thread_in_daemon).start()
     threading.Thread(target=launch_web_server, daemon=start_thread_in_daemon).start()
 
     clean_tmp_file()
     clean_extension_status()
 
-    print("[*INFO*] - To exit web server press Ctrl + C.")
+    logger.info("to close web server, press Ctrl + C")
     while True:
         time.sleep(0.4)
         if GLOBAL_SERVER_SHUTDOWN:
             break
-    print("[*INFO*] - Bye bye, see you next time.")
+    logger.info("Bye bye, see you next time")
