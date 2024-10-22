@@ -2293,7 +2293,7 @@ async def main(args: Union[Namespace, Dict]):
     elif isinstance(args, dict):
         config_dict = args
     else:
-        raise TypeError("args must be Namespace or dict")
+        raise TypeError(f"args must be Namespace or dict, but got {type(args)} instead")
 
     driver = None
     tab = None
