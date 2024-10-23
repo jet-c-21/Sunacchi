@@ -45,6 +45,7 @@ async def async_wait_countdown(total_second: int, descr='Count Down', clear_cons
 def wait_until_time(hour: int,
                     minute: int,
                     second: int = 0,
+                    milliseconds: ?
                     tz: str = 'Asia/Taipei',
                     descr: str = 'Count Down',
                     clear_console: bool = True,

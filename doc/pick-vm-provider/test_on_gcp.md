@@ -4,7 +4,7 @@
 
 - [official doc](https://cloud.google.com/free/docs/free-cloud-features#compute)
 
-we will pick `Oregon: us-west1`
+we will pick `Oregon: us-west1`, `us-west1-b`
 
 ## setup ssh config on ubuntu
 

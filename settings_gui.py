@@ -35,6 +35,8 @@ try:
 except Exception as exc:
     pass
 
+from sunacchi.utils.system_tool import curr_machine_is_gcp_vm
+
 from sunacchi.utils import (
     system_tool,
     network_tool

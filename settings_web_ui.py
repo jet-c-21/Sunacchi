@@ -48,7 +48,7 @@ except Exception as exc:
     pass
 
 from sunacchi.application import get_application_timezone
-from sunacchi.utils.system_tool import get_python_version
+from sunacchi.utils.system_tool import get_python_version, curr_machine_is_gcp_vm
 from sunacchi.utils.datetime_tool import set_os_timezone
 from sunacchi.utils.log_tool import create_logger
 from sunacchi.utils.file_tool import (
@@ -707,9 +707,10 @@ async def _web_server_main():
     logger.info(msg)
 
     try:
-        webbrowser.open_new(url)
-        msg = f"opened homepage with user default browser"
-        logger.info(msg)
+        if not curr_machine_is_gcp_vm():
+            webbrowser.open_new(url)
+            msg = f"opened homepage with user default browser"
+            logger.info(msg)
     except Exception as e:
         msg = f"failed to open homepage with user default browser, Error: {e}"
         logger.exception(msg)
