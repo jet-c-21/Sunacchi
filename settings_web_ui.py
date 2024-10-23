@@ -722,6 +722,11 @@ async def _web_server_main():
 
 def launch_web_server():
     host = 'localhost'
+    if curr_machine_is_gcp_vm():
+        host = '0.0.0.0'  # Bind to all IP addresses if running on GCP VM
+        msg = f"Detected GCP VM. Setting host to {host}"
+        logger.info(msg)
+
     port = CONST_SERVER_PORT
     is_port_bound = network_tool.port_is_connectable(
         host=host,
