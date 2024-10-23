@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     to_json(orig_json, settings_file)
 
-    wait_until_time(11, 59, 59, milliseconds=500)
+    wait_until_time(14, 59, 59, milliseconds=800)
 
     nodriver_py_script = PROJECT_DIR / 'nodriver_tixcraft.py'
     assert nodriver_py_script.is_file(), f"nodriver script not found: {nodriver_py_script}"
