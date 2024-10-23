@@ -45,25 +45,28 @@ async def async_wait_countdown(total_second: int, descr='Count Down', clear_cons
 def wait_until_time(hour: int,
                     minute: int,
                     second: int = 0,
-                    milliseconds: ?
+                    milliseconds: int = 0,  # Added support for milliseconds
                     tz: str = 'Asia/Taipei',
                     descr: str = 'Count Down',
                     clear_console: bool = True,
                     final_range_sec: int = 1):
     """
-    Wait until the specified time (hour, minute, second) in the given timezone.
+    Wait until the specified time (hour, minute, second, milliseconds) in the given timezone.
 
     Parameters:
         hour (int): Hour of the target time (0-23).
         minute (int): Minute of the target time (0-59).
         second (int): Second of the target time (0-59).
+        milliseconds (int): Milliseconds of the target time (0-999).
         tz (str): Timezone in which the time should be interpreted.
         descr (str): Description to display while waiting.
         clear_console (bool): Whether to clear the console before displaying countdown.
     """
     timezone = pytz.timezone(tz)
     now = datetime.datetime.now(timezone)
-    target_time = now.replace(hour=hour, minute=minute, second=second, microsecond=0)
+
+    # Set target time with milliseconds
+    target_time = now.replace(hour=hour, minute=minute, second=second, microsecond=milliseconds * 1000)
 
     # If target time is already passed for today, set it for the next day
     if target_time <= now:
@@ -81,20 +84,21 @@ def wait_until_time(hour: int,
             os.system('cls' if os.name == 'nt' else 'clear')
 
         if not is_close_to_end:
-            # Calculate remaining hours, minutes, and seconds
+            # Calculate remaining hours, minutes, seconds, and milliseconds
             remaining_hours = int(remaining_time // 3600)
             remaining_minutes = int((remaining_time % 3600) // 60)
             remaining_seconds = int(remaining_time % 60)
+            remaining_milliseconds = int((remaining_time * 1000) % 1000)
             print(f"[*INFO*] - {descr}: "
-                  f"{remaining_hours:02}:{remaining_minutes:02}:{remaining_seconds:02} remaining...")
+                  f"{remaining_hours:02}:{remaining_minutes:02}:{remaining_seconds:02}.{remaining_milliseconds:03} remaining...")
 
         # Sleep for a reduced time if close to the target
         if remaining_time > final_range_sec:
-            time.sleep(1)  # Regular sleep when more than 3 seconds remain
+            time.sleep(0.1)  # Regular sleep but now faster checks (100 ms)
         else:
             if not is_close_to_end:
                 print(f"[*INFO*] - {descr}: less than {final_range_sec} seconds remaining...")
                 is_close_to_end = True
-            time.sleep(0.01)  # Sleep in finer intervals for the last few seconds
+            time.sleep(0.001)  # Sleep in finer intervals (1 ms) for the last few seconds
 
     print("[*INFO*] - Time reached! Proceeding...")
