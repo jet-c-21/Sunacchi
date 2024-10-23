@@ -4,6 +4,9 @@ Author: Jet C.
 GitHub: https://github.com/jet-c-21
 Create Date: 10/10/24
 """
+from ._ip_address import (
+    get_public_ip
+)
 from ._geo_location import (
     get_website_server_geo_location
 )

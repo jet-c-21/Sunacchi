@@ -57,6 +57,7 @@ from sunacchi.utils.file_tool import (
     read_json,
     to_json,
 )
+from sunacchi.utils.network_tool import get_public_ip
 from sunacchi.bot import (
     launch_maxbot_main_script_in_subprocess
 )
@@ -131,9 +132,21 @@ URL_FIREFOX_DRIVER = 'https://github.com/mozilla/geckodriver/releases'
 URL_EDGE_DRIVER = 'https://developer.microsoft.com/zh-tw/microsoft-edge/tools/webdriver/'
 
 # <<< <<< const variables <<< <<<
+
+
 APPLICATION_PYTHON_VERSION = get_python_version()
+
 APPLICATION_TIMEZONE = get_application_timezone(CONST_MAXBOT_CONFIG_FILE)
 set_os_timezone(APPLICATION_TIMEZONE)
+
+IS_GCP_VM = curr_machine_is_gcp_vm()
+
+if IS_GCP_VM:
+    SERVER_HOST = '0.0.0.0'
+else:
+    SERVER_HOST = '127.0.0.1'
+
+PUBLIC_IP = get_public_ip()
 
 # global logger
 logger_name = f"{THIS_FILE_PATH.stem}"
@@ -701,13 +714,17 @@ async def _web_server_main():
     msg = f"server running on port: {CONST_SERVER_PORT}"
     logger.info(msg)
 
-    url = f"http://127.0.0.1:{CONST_SERVER_PORT}/settings.html"
-
-    msg = f"server url: {url}"
+    url = f"http://{SERVER_HOST}:{CONST_SERVER_PORT}/settings.html"
+    msg = f"local network server url: {url}"
     logger.info(msg)
 
+    if IS_GCP_VM:
+        _public_url = f"http://{PUBLIC_IP}:{CONST_SERVER_PORT}/settings.html"
+        msg = f"public network server url: {_public_url}"
+        logger.info(msg)
+
     try:
-        if not curr_machine_is_gcp_vm():
+        if not IS_GCP_VM:
             webbrowser.open_new(url)
             msg = f"opened homepage with user default browser"
             logger.info(msg)
@@ -721,12 +738,7 @@ async def _web_server_main():
 
 
 def launch_web_server():
-    host = 'localhost'
-    if curr_machine_is_gcp_vm():
-        host = '0.0.0.0'  # Bind to all IP addresses if running on GCP VM
-        msg = f"Detected GCP VM. Setting host to {host}"
-        logger.info(msg)
-
+    host = SERVER_HOST
     port = CONST_SERVER_PORT
     is_port_bound = network_tool.port_is_connectable(
         host=host,
@@ -802,6 +814,10 @@ if __name__ == "__main__":
     GLOBAL_SERVER_SHUTDOWN = False
 
     bot_launched_count = 0
+
+    if IS_GCP_VM:
+        msg = f"running on GCP VM"
+        logger.info(msg)
 
     msg = f"application python version: {sys.version}"
     logger.info(msg)
