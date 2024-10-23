@@ -26,5 +26,4 @@ def get_application_timezone(app_settings_file: pathlib.Path = None) -> str:
     return settings.get('application_timezone', 'Asia/Taipei')
 
 
-def get_application_python_version() -> str:
-    return platform.python_version()
+

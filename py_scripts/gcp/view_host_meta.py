@@ -23,21 +23,8 @@ from sunacchi.utils.file_tool import (
     read_json,
     to_json,
 )
+from sunacchi.utils.system_tool import curr_machine_is_gcp_vm
 
 if __name__ == '__main__':
-    settings_file = VAR.SETTINGS_FILE
-    orig_json = get_latest_settings_json_from_local(settings_file)
-
-    homepage = 'https://tixcraft.com/activity/detail/24_jaychou'
-    orig_json['homepage'] = homepage
-
-    to_json(orig_json, settings_file)
-
-    # wait_until_time(11, 59, 59)
-    wait_until_time(10, 26, 0)
-
-    nodriver_py_script = PROJECT_DIR / 'nodriver_tixcraft.py'
-    assert nodriver_py_script.is_file(), f"nodriver script not found: {nodriver_py_script}"
-
-    # hwo to run this script in more fast way?
-    Popen(['python3', str(nodriver_py_script), '--homepage', homepage])
+    is_gcp_vm = curr_machine_is_gcp_vm()
+    print(f"[INFO] - is gcp vm: {is_gcp_vm}")

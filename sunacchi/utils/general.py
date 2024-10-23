@@ -84,14 +84,15 @@ def wait_until_time(hour: int,
             remaining_hours = int(remaining_time // 3600)
             remaining_minutes = int((remaining_time % 3600) // 60)
             remaining_seconds = int(remaining_time % 60)
-            print(f"[*INFO*] - {descr}: {remaining_hours:02}:{remaining_minutes:02}:{remaining_seconds:02} remaining...")
+            print(f"[*INFO*] - {descr}: "
+                  f"{remaining_hours:02}:{remaining_minutes:02}:{remaining_seconds:02} remaining...")
 
         # Sleep for a reduced time if close to the target
         if remaining_time > final_range_sec:
             time.sleep(1)  # Regular sleep when more than 3 seconds remain
         else:
             if not is_close_to_end:
-                print(f"[*INFO*] - {descr}: Less than {final_range_sec} seconds remaining...")
+                print(f"[*INFO*] - {descr}: less than {final_range_sec} seconds remaining...")
                 is_close_to_end = True
             time.sleep(0.01)  # Sleep in finer intervals for the last few seconds
 
