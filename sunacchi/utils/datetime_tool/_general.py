@@ -13,3 +13,6 @@ def get_curr_datetime() -> datetime.datetime:
 
 def get_curr_datetime_str() -> str:
     return get_curr_datetime().strftime('%Y-%m-%d %H:%M:%S')
+
+
+

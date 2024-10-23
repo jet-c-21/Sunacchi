@@ -10,16 +10,15 @@
         "force_submit": true,
         "image_source": "canvas"
     },
-    "webdriver_type": "undetected_chromedriver",
+    "webdriver_type": "nodriver",
     "date_auto_select": {
         "enable": true,
         "date_keyword": "",
-        "mode": "random"
+        "mode": "from top to bottom"
     },
     "area_auto_select": {
         "enable": true,
-        "mode": "random",
-        "area_keyword": ""
+        "mode": "from top to bottom"
     },
     "keyword_exclude": "\"輪椅\",\"身障\",\"身心 障礙\",\"Restricted View\",\"燈柱遮蔽\",\"視線不完整\"",
     "kktix": {

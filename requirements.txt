@@ -46,6 +46,9 @@ tornado
 selenium
 undetected-chromedriver
 chromedriver-autoinstaller-max
-nodriver # PS: nodriver need python 3.9+
+# nodriver # PS: nodriver need python 3.9+, and the official version is not support for cookie SID login
+git+https://github.com/jet-c-21/nodriver.git # Jet modified version
+# git+https://github.com/max32002/nodriver # Max modified version
+
 ## nodriver max modified version:
 # python -m pip install git+https://github.com/max32002/nodriver

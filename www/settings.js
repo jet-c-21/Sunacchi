@@ -328,6 +328,8 @@ function do_maxbot_shutdown() {
 }
 
 function save_changes_to_dict(silent_flag) {
+    // update global variable `settings` value by the current value on the webpage
+
     const ticket_number_value = parseInt(ticket_number.value);
     //console.log(ticket_number_value);
     if (!ticket_number_value) {

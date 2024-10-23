@@ -16,11 +16,7 @@ print(f"[INFO] - append directory to path: {PROJECT_DIR}")
 
 from sunacchi import var as VAR
 
-from sunacchi.utils.log_tool import (
-    create_logger,
-    get_cls_instance_logger
-)
+from sunacchi.utils import wait_until_time
 
 if __name__ == '__main__':
-    print(f"VAR.SUNACCHI_PY_PKG_DIR: {VAR.SUNACCHI_PY_PKG_DIR}")
-    print(f"VAR.PROJECT_DIR: {VAR.PROJECT_DIR}")
+    wait_until_time(1, 1, 0)

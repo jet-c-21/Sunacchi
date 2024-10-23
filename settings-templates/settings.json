@@ -2,6 +2,7 @@
     "homepage": "about:blank",
     "browser": "chrome",
     "language": "繁體中文",
+    "application_timezone": "Asia/Taipei",
     "ticket_number": 2,
     "refresh_datetime": "",
     "ocr_captcha": {
@@ -10,15 +11,15 @@
         "force_submit": true,
         "image_source": "canvas"
     },
-    "webdriver_type": "undetected_chromedriver",
+    "webdriver_type": "nodriver",
     "date_auto_select": {
         "enable": true,
         "date_keyword": "",
-        "mode": "random"
+        "mode": "from top to bottom"
     },
     "area_auto_select": {
         "enable": true,
-        "mode": "random",
+        "mode": "from top to bottom",
         "area_keyword": ""
     },
     "keyword_exclude": "\"輪椅\",\"身障\",\"身心 障礙\",\"Restricted View\",\"燈柱遮蔽\",\"視線不完整\"",
@@ -74,7 +75,7 @@
         "ticketplus_password_plaintext": "",
         "chrome_extension": true,
         "disable_adjacent_seat": false,
-        "hide_some_image": false,
+        "hide_some_image": true,
         "block_facebook_network": false,
         "headless": false,
         "verbose": false,

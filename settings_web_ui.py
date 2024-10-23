@@ -22,7 +22,6 @@ import sunacchi
 from sunacchi.utils import (
     system_tool,
     network_tool,
-    file_tool
 )
 
 import util
@@ -48,8 +47,16 @@ try:
 except Exception as exc:
     pass
 
+from sunacchi.application import get_application_timezone
+from sunacchi.utils.system_tool import get_python_version
+from sunacchi.utils.datetime_tool import set_os_timezone
 from sunacchi.utils.log_tool import create_logger
-from sunacchi.utils.file_tool import create_dir
+from sunacchi.utils.file_tool import (
+    create_dir,
+    create_file_from_template,
+    read_json,
+    to_json,
+)
 from sunacchi.bot import (
     launch_maxbot_main_script_in_subprocess
 )
@@ -63,11 +70,6 @@ SETTINGS_TPL_FILE = SETTINGS_TEMPLATES_DIR / 'settings.json'
 
 LOG_DIR = PROJECT_DIR / 'logs'
 create_dir(LOG_DIR)
-
-# global logger
-logger_name = f"{THIS_FILE_PATH.stem}"
-log_path = LOG_DIR / f"{logger_name}.log"
-logger = create_logger(logger_name, log_path=log_path)
 
 # >>> >>> const variables >>> >>>
 CONST_APP_VERSION = f"Sunacchi - v{sunacchi.__version__}"
@@ -128,8 +130,16 @@ URL_CHROME_DRIVER = 'https://chromedriver.chromium.org/'
 URL_FIREFOX_DRIVER = 'https://github.com/mozilla/geckodriver/releases'
 URL_EDGE_DRIVER = 'https://developer.microsoft.com/zh-tw/microsoft-edge/tools/webdriver/'
 
-
 # <<< <<< const variables <<< <<<
+APPLICATION_PYTHON_VERSION = get_python_version()
+APPLICATION_TIMEZONE = get_application_timezone(CONST_MAXBOT_CONFIG_FILE)
+set_os_timezone(APPLICATION_TIMEZONE)
+
+# global logger
+logger_name = f"{THIS_FILE_PATH.stem}"
+log_path = LOG_DIR / f"{logger_name}.log"
+logger = create_logger(logger_name, log_path=log_path)
+
 
 def get_default_config() -> Dict:
     """
@@ -270,7 +280,7 @@ def _load_settings_from_local_json_file(do_log=True) -> Tuple[pathlib.Path, Dict
         logger.debug(msg)
 
     if not _config_json_file.is_file():
-        _config_json_file = file_tool.create_file_from_template(
+        _config_json_file = create_file_from_template(
             _config_json_file, SETTINGS_TPL_FILE
         )
         msg = f"config json file is not existed,\n" \
@@ -278,7 +288,7 @@ def _load_settings_from_local_json_file(do_log=True) -> Tuple[pathlib.Path, Dict
               f"new config json file: {_config_json_file}"
         logger.debug(msg)
 
-    _config_dict = file_tool.read_json(_config_json_file)
+    _config_dict = read_json(_config_json_file)
     if _config_dict is None:
         _config_dict = get_default_config()
         msg = f"failed to read config json content from local file, get default config instead"
@@ -561,7 +571,7 @@ class SaveJsonHandler(tornado.web.RequestHandler):
             if ".cityline.com" in config_dict["homepage"]:
                 config_dict["webdriver_type"] = CONST_WEBDRIVER_TYPE_NODRIVER
 
-            util.save_json(config_dict, config_filepath)
+            to_json(config_dict, config_filepath)
 
         if not is_pass_check:
             self.set_status(401)
@@ -612,9 +622,12 @@ class OcrHandler(tornado.web.RequestHandler):
         if not img_base64 is None:
             try:
                 ocr_answer = self.application.ocr.classification(img_base64)
-                print("ocr_answer:", ocr_answer)
-            except Exception as exc:
-                pass
+                msg = f"predicted ocr_answer: {ocr_answer}"
+                logger.info(msg)
+
+            except Exception as e:
+                msg = f"failed to get predicted ocr_answer, Error: {e}"
+                logger.exception(msg)
 
         self.write({"answer": ocr_answer})
 
@@ -642,7 +655,7 @@ class QueryHandler(tornado.web.RequestHandler):
         self.write(answer_text_output)
 
 
-async def main_server():
+async def _web_server_main():
     msg = f"start running main_server() ..."
     logger.info(msg)
 
@@ -693,9 +706,13 @@ async def main_server():
     msg = f"server url: {url}"
     logger.info(msg)
 
-    webbrowser.open_new(url)
-    msg = f"opened homepage with user default browser"
-    logger.info(msg)
+    try:
+        webbrowser.open_new(url)
+        msg = f"opened homepage with user default browser"
+        logger.info(msg)
+    except Exception as e:
+        msg = f"failed to open homepage with user default browser, Error: {e}"
+        logger.exception(msg)
 
     msg = f"🚀🚀🚀 finish running main_server() 🚀🚀🚀 start waiting for event"
     logger.info(msg)
@@ -711,7 +728,7 @@ def launch_web_server():
     )
 
     if not is_port_bound:
-        asyncio.run(main_server())
+        asyncio.run(_web_server_main())
 
     else:
         msg = f"port: {CONST_SERVER_PORT} on host: {host} is already in used"
@@ -779,6 +796,9 @@ if __name__ == "__main__":
     GLOBAL_SERVER_SHUTDOWN = False
 
     bot_launched_count = 0
+
+    msg = f"application python version: {sys.version}"
+    logger.info(msg)
 
     start_thread_in_daemon = True
     threading.Thread(

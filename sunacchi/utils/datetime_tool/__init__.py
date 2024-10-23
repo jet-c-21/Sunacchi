@@ -8,3 +8,6 @@ from ._general import (
     get_curr_datetime,
     get_curr_datetime_str,
 )
+from ._timezone import (
+    set_os_timezone
+)

@@ -1,3 +1,4 @@
+from typing import List, Dict, Any, Tuple, Optional
 import base64
 import json
 import os
@@ -9,7 +10,6 @@ import socket
 import subprocess
 import sys
 import threading
-from typing import Optional
 
 import requests
 
@@ -445,388 +445,267 @@ def get_brave_bin_path():
     return brave_path
 
 
-# convert web string to reg pattern
-def convert_string_to_pattern(my_str, dynamic_length=True):
-    my_hint_anwser_length = len(my_str)
-    my_formated = ""
-    if my_hint_anwser_length > 0:
-        my_anwser_symbols = "()[]<>{}-"
-        for idx in range(my_hint_anwser_length):
-            char = my_str[idx:idx + 1]
+def convert_string_to_pattern(input_str, dynamic_length=True):
+    hint_answer_length = len(input_str)
+    formatted_pattern = ""
 
-            if char in my_anwser_symbols:
-                my_formated += ('\\' + char)
-                continue
+    if hint_answer_length > 0:
+        answer_symbols = r"()[]<>{}-"
+        upper_case_pattern = re.compile(r"[A-Z]")
+        lower_case_pattern = re.compile(r"[a-z]")
+        digit_pattern = re.compile(r"\d")
 
-            pattern = re.compile("[A-Z]")
-            match_result = pattern.match(char)
-            # print("match_result A:", match_result)
-            if not match_result is None:
-                my_formated += "[A-Z]"
+        for char in input_str:
+            if char in answer_symbols:
+                formatted_pattern += '\\' + char
+            elif upper_case_pattern.match(char):
+                formatted_pattern += "[A-Z]"
+            elif lower_case_pattern.match(char):
+                formatted_pattern += "[a-z]"
+            elif digit_pattern.match(char):
+                formatted_pattern += r"\d"
 
-            pattern = re.compile("[a-z]")
-            match_result = pattern.match(char)
-            # print("match_result a:", match_result)
-            if not match_result is None:
-                my_formated += "[a-z]"
-
-            pattern = re.compile("[\d]")
-            match_result = pattern.match(char)
-            # print("match_result d:", match_result)
-            if not match_result is None:
-                my_formated += "[\d]"
-
-        # for dynamic length
+        # For dynamic length, reduce consecutive patterns and apply '+' for repetition
         if dynamic_length:
-            for i in range(10):
-                my_formated = my_formated.replace("[A-Z][A-Z]", "[A-Z]")
-                my_formated = my_formated.replace("[a-z][a-z]", "[a-z]")
-                my_formated = my_formated.replace("[\d][\d]", "[\d]")
+            for _ in range(10):  # Ensure replacement happens for long sequences
+                formatted_pattern = formatted_pattern.replace("[A-Z][A-Z]", "[A-Z]")
+                formatted_pattern = formatted_pattern.replace("[a-z][a-z]", "[a-z]")
+                formatted_pattern = formatted_pattern.replace(r"\d\d", r"\d")
 
-            my_formated = my_formated.replace("[A-Z]", "[A-Z]+")
-            my_formated = my_formated.replace("[a-z]", "[a-z]+")
-            my_formated = my_formated.replace("[\d]", "[\d]+")
-    return my_formated
+            formatted_pattern = formatted_pattern.replace("[A-Z]", "[A-Z]+")
+            formatted_pattern = formatted_pattern.replace("[a-z]", "[a-z]+")
+            formatted_pattern = formatted_pattern.replace(r"\d", r"\d+")
+
+    return formatted_pattern
 
 
 def guess_answer_list_from_multi_options(tmp_text):
-    show_debug_message = True  # debug.
-    show_debug_message = False  # online
+    show_debug_message = False  # Set to True for debugging
 
     options_list = []
     matched_pattern = ""
-    if len(options_list) == 0:
-        if '【' in tmp_text and '】' in tmp_text:
-            pattern = '【.{1,4}】'
+    patterns = [
+        (r'【.{1,4}】', '【', '】'),
+        (r'\(.{1,4}\)', '(', ')'),
+        (r'\[{1,4}\]', '[', ']'),
+        (r'\\n.{1,4}\)', "\n", ')'),
+        (r'\\n.{1,4}\]', "\n", ']'),
+        (r'\\n.{1,4}】', "\n", '】'),
+        (r'\\n.{1,4}:', "\n", ':'),
+    ]
+
+    # Match patterns in sequence
+    for pattern, start_symbol, end_symbol in patterns:
+        if not options_list and start_symbol in tmp_text and end_symbol in tmp_text:
             options_list = re.findall(pattern, tmp_text)
-            if len(options_list) <= 2:
-                options_list = []
-            else:
+            if len(options_list) > 2:
                 matched_pattern = pattern
+                break
 
-    if len(options_list) == 0:
-        if '(' in tmp_text and ')' in tmp_text:
-            pattern = '\(.{1,4}\)'
+    # Custom pattern if no options found
+    if not options_list and " " in tmp_text and '?' in tmp_text:
+        if any(symbol in tmp_text for symbol in ['.', ':', ')', ']', '>']):
+            pattern = r"[ /\n\|;\.\?]{1}.{1}[\.:)\]>]{1}.{2,3}"
             options_list = re.findall(pattern, tmp_text)
-            if len(options_list) <= 2:
-                options_list = []
-            else:
+            if len(options_list) > 2:
+                options_list = [opt.strip(" .?|;:/")[:1] for opt in options_list]
                 matched_pattern = pattern
-
-    if len(options_list) == 0:
-        if '[' in tmp_text and ']' in tmp_text:
-            pattern = '\[.{1,4}\]'
-            options_list = re.findall(pattern, tmp_text)
-            if len(options_list) <= 2:
-                options_list = []
-            else:
-                matched_pattern = pattern
-
-    if len(options_list) == 0:
-        if "\n" in tmp_text and ')' in tmp_text:
-            pattern = "\\n.{1,4}\)"
-            options_list = re.findall(pattern, tmp_text)
-            if len(options_list) <= 2:
-                options_list = []
-            else:
-                matched_pattern = pattern
-
-    if len(options_list) == 0:
-        if "\n" in tmp_text and ']' in tmp_text:
-            pattern = "\\n.{1,4}\]"
-            options_list = re.findall(pattern, tmp_text)
-            if len(options_list) <= 2:
-                options_list = []
-            else:
-                matched_pattern = pattern
-
-    if len(options_list) == 0:
-        if "\n" in tmp_text and '】' in tmp_text:
-            pattern = "\\n.{1,4}】"
-            options_list = re.findall(pattern, tmp_text)
-            if len(options_list) <= 2:
-                options_list = []
-            else:
-                matched_pattern = pattern
-
-    if len(options_list) == 0:
-        if "\n" in tmp_text and ':' in tmp_text:
-            pattern = "\\n.{1,4}:"
-            options_list = re.findall(pattern, tmp_text)
-            if len(options_list) <= 2:
-                options_list = []
-            else:
-                matched_pattern = pattern
-
-    if len(options_list) == 0:
-        if " " in tmp_text and '?' in tmp_text:
-            if ('.' in tmp_text or ':' in tmp_text or ')' in tmp_text or ']' in tmp_text or '>' in tmp_text):
-                pattern = "[ /\n\|;\.\?]{1}.{1}[\.:)\]>]{1}.{2,3}"
-                options_list = re.findall(pattern, tmp_text)
-                if len(options_list) <= 2:
-                    options_list = []
-                else:
-                    formated_list = []
-                    for new_item in options_list:
-                        new_item = new_item.strip()
-                        if new_item[:1] == ".":
-                            new_item = new_item[1:]
-                        if new_item[:1] == "?":
-                            new_item = new_item[1:]
-                        if new_item[:1] == "|":
-                            new_item = new_item[1:]
-                        if new_item[:1] == ";":
-                            new_item = new_item[1:]
-                        if new_item[:1] == "/":
-                            new_item = new_item[1:]
-                        new_item = new_item.strip()
-                        new_item = new_item[:1]
-                        formated_list.append(new_item)
-                    options_list = formated_list
-
-                    matched_pattern = pattern
 
     if show_debug_message:
-        print("matched pattern:", matched_pattern)
+        print(f"Matched pattern: {matched_pattern}")
 
-    # default remove quota
+    # Default quota trimming
     is_trim_quota = not check_answer_keep_symbol(tmp_text)
+
     if show_debug_message:
-        print("is_trim_quota:", is_trim_quota)
+        print(f"Trim Quota: {is_trim_quota}")
 
     return_list = []
-    if len(options_list) > 0:
-        options_list_length = len(options_list)
+    if len(options_list) > 2:
+        is_all_options_same_length = all(
+            len(options_list[i]) == len(options_list[i + 1]) for i in range(len(options_list) - 1)
+        )
+
         if show_debug_message:
-            print("options_list_length:", options_list_length)
-            print("options_list:", options_list)
-        if options_list_length > 2:
-            is_all_options_same_length = True
-            options_length_count = {}
-            for i in range(options_list_length - 1):
-                current_option_length = len(options_list[i])
-                next_option_length = len(options_list[i + 1])
-                if current_option_length != next_option_length:
-                    is_all_options_same_length = False
-                if current_option_length in options_length_count:
-                    options_length_count[current_option_length] += 1
-                else:
-                    options_length_count[current_option_length] = 1
+            print(f"All options same length: {is_all_options_same_length}")
 
-            if show_debug_message:
-                print("is_all_options_same_length:", is_all_options_same_length)
+        if is_all_options_same_length:
+            return_list = [opt[1:-1] if is_trim_quota else opt for opt in options_list if len(opt) > 2]
+        else:
+            length_counts = {len(opt): options_list.count(opt) for opt in options_list}
+            target_length = max(length_counts, key=length_counts.get)
+            return_list = [opt[1:-1] if is_trim_quota else opt for opt in options_list if len(opt) == target_length]
 
-            if is_all_options_same_length:
-                return_list = []
-                for each_option in options_list:
-                    if len(each_option) > 2:
-                        if is_trim_quota:
-                            return_list.append(each_option[1:-1])
-                        else:
-                            return_list.append(each_option)
-                    else:
-                        return_list.append(each_option)
-            else:
-                # print("options_length_count:", options_length_count)
-                if len(options_length_count) > 0:
-                    target_option_length = 0
-                    most_length_count = 0
-                    for k in options_length_count.keys():
-                        if options_length_count[k] > most_length_count:
-                            most_length_count = options_length_count[k]
-                            target_option_length = k
-                    # print("most_length_count:", most_length_count)
-                    # print("target_option_length:", target_option_length)
-                    if target_option_length > 0:
-                        return_list = []
-                        for each_option in options_list:
-                            current_option_length = len(each_option)
-                            if current_option_length == target_option_length:
-                                if is_trim_quota:
-                                    return_list.append(each_option[1:-1])
-                                else:
-                                    return_list.append(each_option)
-
-    # something is wrong, give up when option equal 2 options.
+    # If only two options, reset the list
     if len(return_list) <= 2:
         return_list = []
 
-    # remove chinese work options.
-    if len(options_list) > 0:
-        new_list = []
-        for item in return_list:
-            if is_all_alpha_or_numeric(item):
-                new_list.append(item)
-        if len(new_list) >= 3:
-            return_list = new_list
+    # Remove non-alphanumeric options
+    return_list = [opt for opt in return_list if is_all_alpha_or_numeric(opt)] if len(return_list) > 2 else []
 
     return return_list
 
 
 # PS: this may get a wrong answer list. XD
-def guess_answer_list_from_symbols(captcha_text_div_text):
+def guess_answer_list_from_symbols(captcha_text_div_text) -> List:
     return_list = []
-    # need replace to space to get first options.
-    tmp_text = captcha_text_div_text
-    tmp_text = tmp_text.replace('?', ' ')
-    tmp_text = tmp_text.replace('？', ' ')
-    tmp_text = tmp_text.replace('。', ' ')
 
-    delimitor_symbols_left = [u"(", "[", "{", " ", " ", " ", " "]
-    delimitor_symbols_right = [u")", "]", "}", ":", ".", ")", "-"]
-    idx = -1
-    for idx in range(len(delimitor_symbols_left)):
-        symbol_left = delimitor_symbols_left[idx]
-        symbol_right = delimitor_symbols_right[idx]
+    # Replace specific characters with spaces to normalize input
+    tmp_text = captcha_text_div_text.replace('?', ' ').replace('？', ' ').replace('。', ' ')
+
+    delimiter_symbols_left = ["(", "[", "{", " ", " ", " ", " "]
+    delimiter_symbols_right = [")", "]", "}", ":", ".", ")", "-"]
+
+    # Iterate over symbol pairs
+    for idx in range(len(delimiter_symbols_left)):
+        symbol_left = delimiter_symbols_left[idx]
+        symbol_right = delimiter_symbols_right[idx]
+
+        # Check if the current pair of symbols is in the text and if '半形' is present
         if symbol_left in tmp_text and symbol_right in tmp_text and '半形' in tmp_text:
-            hint_list = re.findall('\\' + symbol_left + '[\\w]+\\' + symbol_right, tmp_text)
-            # print("hint_list:", hint_list)
-            if not hint_list is None:
-                if len(hint_list) > 1:
-                    return_list = []
-                    my_answer_delimitor = symbol_right
-                    for options in hint_list:
-                        if len(options) > 2:
-                            my_anwser = options[1:-1]
-                            # print("my_anwser:",my_anwser)
-                            if len(my_anwser) > 0:
-                                return_list.append(my_anwser)
+            # hint_list = re.findall(rf'\{re.escape(symbol_left)}[\w]+\{re.escape(symbol_right)}', tmp_text) # old one
+            hint_list = re.findall(rf'{re.escape(symbol_left)}[\w]+{re.escape(symbol_right)}', tmp_text)
 
-        if len(return_list) > 0:
+            # If matching hints found, process and store them
+            if hint_list and len(hint_list) > 1:
+                return_list = []
+                for option in hint_list:
+                    if len(option) > 2:
+                        answer = option[1:-1]  # Remove the surrounding delimiters
+                        if answer:
+                            return_list.append(answer)
+
+        # Exit the loop if valid results are found
+        if return_list:
             break
+
     return return_list
 
 
-def get_offical_hint_string_from_symbol(symbol, tmp_text):
-    show_debug_message = True  # debug.
-    show_debug_message = False  # online
+def get_official_hint_string_from_symbol(symbol, tmp_text) -> str:
+    # show_debug_message = True
+    show_debug_message = False  # Change to True for debugging
 
-    offical_hint_string = ""
+    official_hint_string = ""
+
+    # Check if the symbol exists in the provided text
     if symbol in tmp_text:
-        # start to guess offical hint
-        if offical_hint_string == "":
+        # Try to find the hint enclosed by 【】 brackets
+        if not official_hint_string:
             if '【' in tmp_text and '】' in tmp_text:
-                hint_list = re.findall('【.*?】', tmp_text)
-                if not hint_list is None:
-                    if show_debug_message:
-                        print("【.*?】hint_list:", hint_list)
-                    for hint in hint_list:
-                        if symbol in hint:
-                            offical_hint_string = hint[1:-1]
-                            break
-        if offical_hint_string == "":
+                hint_list = re.findall(r'【.*?】', tmp_text)
+                if show_debug_message:
+                    print("【.*?】hint_list:", hint_list)
+                for hint in hint_list:
+                    if symbol in hint:
+                        official_hint_string = hint[1:-1]  # Remove the 【 and 】 symbols
+                        break
+
+        # Try to find the hint enclosed by parentheses ()
+        if not official_hint_string:
             if '(' in tmp_text and ')' in tmp_text:
-                hint_list = re.findall('\(.*?\)', tmp_text)
-                if not hint_list is None:
-                    if show_debug_message:
-                        print("\(.*?\)hint_list:", hint_list)
-                    for hint in hint_list:
-                        if symbol in hint:
-                            offical_hint_string = hint[1:-1]
-                            break
-        if offical_hint_string == "":
+                hint_list = re.findall(r'\(.*?\)', tmp_text)
+                if show_debug_message:
+                    print("(.*?) hint_list:", hint_list)
+
+                for hint in hint_list:
+                    if symbol in hint:
+                        official_hint_string = hint[1:-1]  # Remove the ( and ) symbols
+                        break
+
+        # Try to find the hint enclosed by square brackets []
+        if not official_hint_string:
             if '[' in tmp_text and ']' in tmp_text:
-                hint_list = re.findall('[.*?]', tmp_text)
-                if not hint_list is None:
-                    if show_debug_message:
-                        print("[.*?]hint_list:", hint_list)
-                    for hint in hint_list:
-                        if symbol in hint:
-                            offical_hint_string = hint[1:-1]
-                            break
-        if offical_hint_string == "":
-            offical_hint_string = tmp_text
-    return offical_hint_string
+                hint_list = re.findall(r'\[.*?\]', tmp_text)
+                if show_debug_message:
+                    print("[.*?]hint_list:", hint_list)
+                for hint in hint_list:
+                    if symbol in hint:
+                        official_hint_string = hint[1:-1]  # Remove the [ and ] symbols
+                        break
+
+        # If no specific hint was found, return the original text
+        if not official_hint_string:
+            official_hint_string = tmp_text
+
+    return official_hint_string
 
 
-def guess_answer_list_from_hint(CONST_EXAMPLE_SYMBOL, CONST_INPUT_SYMBOL, captcha_text_div_text):
-    show_debug_message = True  # debug.
-    show_debug_message = False  # online
+def guess_answer_list_from_hint(CONST_EXAMPLE_SYMBOL, CONST_INPUT_SYMBOL, captcha_text_div_text) -> Tuple[List, str]:
+    show_debug_message = False  # Change to True for debugging
 
     tmp_text = format_question_string(CONST_EXAMPLE_SYMBOL, CONST_INPUT_SYMBOL, captcha_text_div_text)
 
     my_question = ""
     my_options = ""
-    offical_hint_string = ""
-    offical_hint_string_anwser = ""
-    my_anwser_formated = ""
-    my_answer_delimitor = ""
+    official_hint_string = ""
+    official_hint_string_answer = ""
+    my_answer_formatted = ""
+    my_answer_delimiter = ""
 
-    if my_question == "":
-        if "?" in tmp_text:
-            question_index = tmp_text.find("?")
+    # Extract question from the text
+    if not my_question:
+        question_index = tmp_text.find("?")
+        if question_index != -1:
             my_question = tmp_text[:question_index + 1]
-    if my_question == "":
-        if "。" in tmp_text:
+        else:
             question_index = tmp_text.find("。")
-            my_question = tmp_text[:question_index + 1]
-    if my_question == "":
-        my_question = tmp_text
-    # print("my_question:", my_question)
+            if question_index != -1:
+                my_question = tmp_text[:question_index + 1]
+            else:
+                my_question = tmp_text
 
-    # ps: hint_list is not options list
+    # Extract official hint string based on symbol
+    if not official_hint_string and '答案' in tmp_text and CONST_INPUT_SYMBOL in tmp_text:
+        official_hint_string = get_official_hint_string_from_symbol(CONST_INPUT_SYMBOL, tmp_text)
+        if official_hint_string:
+            right_part = official_hint_string.split(CONST_INPUT_SYMBOL)[1]
+            if len(official_hint_string) == len(tmp_text):
+                official_hint_string = right_part
+            official_hint_string_answer = find_continuous_text(right_part)
 
-    if offical_hint_string == "":
-        # for: 若你覺得答案為 a，請輸入 a
-        if '答案' in tmp_text and CONST_INPUT_SYMBOL in tmp_text:
-            offical_hint_string = get_offical_hint_string_from_symbol(CONST_INPUT_SYMBOL, tmp_text)
-        if len(offical_hint_string) > 0:
-            right_part = offical_hint_string.split(CONST_INPUT_SYMBOL)[1]
-            # print("right_part:", right_part)
-            if len(offical_hint_string) == len(tmp_text):
-                offical_hint_string = right_part
+    if not official_hint_string:
+        official_hint_string = get_official_hint_string_from_symbol(CONST_EXAMPLE_SYMBOL, tmp_text)
+        if official_hint_string:
+            right_part = official_hint_string.split(CONST_EXAMPLE_SYMBOL)[1]
+            if len(official_hint_string) == len(tmp_text):
+                official_hint_string = right_part
+            official_hint_string_answer = find_continuous_text(right_part)
 
-            new_hint = find_continuous_text(right_part)
-            if len(new_hint) > 0:
-                # TODO: 答案為B需填入Bb)
-                # if '答案' in offical_hint_string and CONST_INPUT_SYMBOL in offical_hint_string:
-                offical_hint_string_anwser = new_hint
-
-    if offical_hint_string == "":
-        offical_hint_string = get_offical_hint_string_from_symbol(CONST_EXAMPLE_SYMBOL, tmp_text)
-        if len(offical_hint_string) > 0:
-            right_part = offical_hint_string.split(CONST_EXAMPLE_SYMBOL)[1]
-            if len(offical_hint_string) == len(tmp_text):
-                offical_hint_string = right_part
-
-            # PS: find first text will only get B char in this case: 答案為B需填入Bb)
-            new_hint = find_continuous_text(right_part)
-            if len(new_hint) > 0:
-                offical_hint_string_anwser = new_hint
-
-    # resize offical_hint_string_anwser for options contains in hint string.
-    # print("offical_hint_string_anwser:", offical_hint_string_anwser)
-    if len(offical_hint_string_anwser) > 0:
-        offical_hint_string = offical_hint_string.split(offical_hint_string_anwser)[0]
+    # Resize the hint string for options
+    if official_hint_string_answer:
+        official_hint_string = official_hint_string.split(official_hint_string_answer)[0]
 
     if show_debug_message:
-        print("offical_hint_string:", offical_hint_string)
+        print("official_hint_string:", official_hint_string)
 
-    # try rule4:
-    # get hint from rule 3: without '(' & '), but use "*"
-    if len(offical_hint_string) == 0:
-        target_symbol = "*"
-        if target_symbol in tmp_text:
-            star_index = tmp_text.find(target_symbol)
-            space_index = tmp_text.find(" ", star_index + len(target_symbol))
-            offical_hint_string = tmp_text[star_index: space_index]
+    # Apply additional rule to extract the hint based on "*"
+    if not official_hint_string and "*" in tmp_text:
+        star_index = tmp_text.find("*")
+        space_index = tmp_text.find(" ", star_index + 1)
+        official_hint_string = tmp_text[star_index:space_index]
 
-    # is need to merge next block
-    if len(offical_hint_string) > 0:
-        target_symbol = offical_hint_string + " "
+    # Merge with the next block if necessary
+    if official_hint_string:
+        target_symbol = official_hint_string + " "
         if target_symbol in tmp_text:
             star_index = tmp_text.find(target_symbol)
             next_block_index = star_index + len(target_symbol)
             space_index = tmp_text.find(" ", next_block_index)
-            next_block = tmp_text[next_block_index: space_index]
+            next_block = tmp_text[next_block_index:space_index]
             if CONST_EXAMPLE_SYMBOL in next_block:
-                offical_hint_string += ' ' + next_block
+                official_hint_string += ' ' + next_block
 
-    # try rule5:
-    # get hint from rule 3: n個半形英文大寫
-    if len(offical_hint_string) == 0:
-        target_symbol = "個半形英文大寫"
-        if target_symbol in tmp_text:
+    # Apply specific hint rules based on character count hints
+    char_count_rules = [
+        ("個半形英文大寫", 'A'),
+        ("個英文大寫", 'A'),
+        ("個半形英文小寫", 'a'),
+        ("個英文小寫", 'a'),
+        ("個英數半形字", r'[A-Za-z\d]')
+    ]
+    for target_symbol, char_type in char_count_rules:
+        if not official_hint_string and target_symbol in tmp_text:
             star_index = tmp_text.find(target_symbol)
             space_index = tmp_text.find(" ", star_index)
             answer_char_count = tmp_text[star_index - 1:star_index]
@@ -834,162 +713,52 @@ def guess_answer_list_from_hint(CONST_EXAMPLE_SYMBOL, CONST_INPUT_SYMBOL, captch
                 answer_char_count = chinese_numeric_to_int(answer_char_count)
                 if answer_char_count is None:
                     answer_char_count = '0'
+                official_hint_string_answer = char_type * int(answer_char_count)
+            official_hint_string = tmp_text[star_index:space_index]
 
-                star_index -= 1
-                offical_hint_string_anwser = 'A' * int(answer_char_count)
-            offical_hint_string = tmp_text[star_index: space_index]
+    # Format the answer from the extracted hint
+    if official_hint_string_answer:
+        my_answer_formatted = convert_string_to_pattern(official_hint_string_answer)
 
-        target_symbol = "個英文大寫"
-        if target_symbol in tmp_text:
-            star_index = tmp_text.find(target_symbol)
-            space_index = tmp_text.find(" ", star_index)
-            answer_char_count = tmp_text[star_index - 1:star_index]
-            if answer_char_count.isnumeric():
-                answer_char_count = chinese_numeric_to_int(answer_char_count)
-                if answer_char_count is None:
-                    answer_char_count = '0'
+    # Remove question part from the options and replace the official hint string
+    my_options = tmp_text.replace(my_question, "").replace(official_hint_string, "")
 
-                star_index -= 1
-                offical_hint_string_anwser = 'A' * int(answer_char_count)
-            offical_hint_string = tmp_text[star_index: space_index]
-
-        target_symbol = "個半形英文小寫"
-        if target_symbol in tmp_text:
-            star_index = tmp_text.find(target_symbol)
-            space_index = tmp_text.find(" ", star_index)
-            answer_char_count = tmp_text[star_index - 1:star_index]
-            if answer_char_count.isnumeric():
-                answer_char_count = chinese_numeric_to_int(answer_char_count)
-                if answer_char_count is None:
-                    answer_char_count = '0'
-
-                star_index -= 1
-                offical_hint_string_anwser = 'a' * int(answer_char_count)
-            offical_hint_string = tmp_text[star_index: space_index]
-
-        target_symbol = "個英文小寫"
-        if target_symbol in tmp_text:
-            star_index = tmp_text.find(target_symbol)
-            space_index = tmp_text.find(" ", star_index)
-            answer_char_count = tmp_text[star_index - 1:star_index]
-            if answer_char_count.isnumeric():
-                answer_char_count = chinese_numeric_to_int(answer_char_count)
-                if answer_char_count is None:
-                    answer_char_count = '0'
-
-                star_index -= 1
-                offical_hint_string_anwser = 'a' * int(answer_char_count)
-            offical_hint_string = tmp_text[star_index: space_index]
-
-        target_symbol = "個英數半形字"
-        if target_symbol in tmp_text:
-            star_index = tmp_text.find(target_symbol)
-            space_index = tmp_text.find(" ", star_index)
-            answer_char_count = tmp_text[star_index - 1:star_index]
-            if answer_char_count.isnumeric():
-                answer_char_count = chinese_numeric_to_int(answer_char_count)
-                if answer_char_count is None:
-                    answer_char_count = '0'
-
-                star_index -= 1
-                my_anwser_formated = '[A-Za-z\d]' * int(answer_char_count)
-            offical_hint_string = tmp_text[star_index: space_index]
-
-        target_symbol = "個半形"
-        if target_symbol in tmp_text:
-            star_index = tmp_text.find(target_symbol)
-            space_index = tmp_text.find(" ", star_index)
-            answer_char_count = tmp_text[star_index - 1:star_index]
-            if answer_char_count.isnumeric():
-                answer_char_count = chinese_numeric_to_int(answer_char_count)
-                if answer_char_count is None:
-                    answer_char_count = '0'
-
-                star_index -= 1
-                my_anwser_formated = '[A-Za-z\d]' * int(answer_char_count)
-            offical_hint_string = tmp_text[star_index: space_index]
-
-    if len(offical_hint_string) > 0:
-        if show_debug_message:
-            print("offical_hint_string_anwser:", offical_hint_string_anwser)
-        my_anwser_formated = convert_string_to_pattern(offical_hint_string_anwser)
-
-    my_options = tmp_text
-    if len(my_question) < len(tmp_text):
-        my_options = my_options.replace(my_question, "")
-    my_options = my_options.replace(offical_hint_string, "")
-
-    # try rule7:
-    # check is chinese/english in question, if match, apply my_options rule.
-    if len(offical_hint_string) > 0:
-        tmp_text_org = captcha_text_div_text
-        if CONST_EXAMPLE_SYMBOL in tmp_text:
-            tmp_text_org = tmp_text_org.replace('Ex:', 'ex:')
-            target_symbol = "ex:"
-            if target_symbol in tmp_text_org:
-                star_index = tmp_text_org.find(target_symbol)
-                my_options = tmp_text_org[star_index - 1:]
-
-    if show_debug_message:
-        print("tmp_text:", tmp_text)
-        print("my_options:", my_options)
-
-    if len(my_anwser_formated) > 0:
-        allow_delimitor_symbols = ")].: }"
-        pattern = re.compile(my_anwser_formated)
+    # Use pattern to search for the answer within the options
+    if my_answer_formatted:
+        allow_delimiter_symbols = ")].: }"
+        pattern = re.compile(my_answer_formatted)
         search_result = pattern.search(my_options)
-        if not search_result is None:
-            (span_start, span_end) = search_result.span()
-            maybe_delimitor = ""
-            if len(my_options) > (span_end + 1) + 1:
-                maybe_delimitor = my_options[span_end + 0:span_end + 1]
-            if maybe_delimitor in allow_delimitor_symbols:
-                my_answer_delimitor = maybe_delimitor
+        if search_result:
+            span_start, span_end = search_result.span()
+            maybe_delimiter = my_options[span_end:span_end + 1]
+            if maybe_delimiter in allow_delimiter_symbols:
+                my_answer_delimiter = maybe_delimiter
 
     if show_debug_message:
-        print("my_answer_delimitor:", my_answer_delimitor)
+        print("my_answer_delimiter:", my_answer_delimiter)
 
-    # default remove quota
+    # Check if the answer delimiter is valid and extract the answers
     is_trim_quota = not check_answer_keep_symbol(tmp_text)
-    if show_debug_message:
-        print("is_trim_quota:", is_trim_quota)
-
     return_list = []
-    if len(my_anwser_formated) > 0:
-        new_pattern = my_anwser_formated
-        if len(my_answer_delimitor) > 0:
-            new_pattern = my_anwser_formated + '\\' + my_answer_delimitor
-
+    if my_answer_formatted:
+        new_pattern = my_answer_formatted + ('\\' + my_answer_delimiter if my_answer_delimiter else '')
         return_list = re.findall(new_pattern, my_options)
-        if show_debug_message:
-            print("my_anwser_formated:", my_anwser_formated)
-            print("new_pattern:", new_pattern)
-            print("return_list:", return_list)
 
-        if not return_list is None:
-            if len(return_list) == 1:
-                # re-sample for this case.
-                return_list = re.findall(my_anwser_formated, my_options)
+        if len(return_list) == 1:
+            return_list = re.findall(my_answer_formatted, my_options)
 
-            if len(return_list) == 1:
-                # if use pattern to find matched only one, means it is for example text.
-                return_list = None
+        if len(return_list) == 1:
+            return_list = None
 
-        if not return_list is None:
-            # clean delimitor
-            if is_trim_quota:
-                return_list_length = len(return_list)
-                if return_list_length >= 1:
-                    if len(my_answer_delimitor) > 0:
-                        for idx in range(return_list_length):
-                            return_list[idx] = return_list[idx].replace(my_answer_delimitor, '')
-                if show_debug_message:
-                    print("cleaned return_list:", return_list)
+        # Clean delimiters from the answer list
+        if return_list:
+            if is_trim_quota and my_answer_delimiter:
+                return_list = [answer.replace(my_answer_delimiter, '') for answer in return_list]
 
         if return_list is None:
             return_list = []
 
-    return return_list, offical_hint_string_anwser
+    return return_list, official_hint_string_answer
 
 
 def format_question_string(CONST_EXAMPLE_SYMBOL, CONST_INPUT_SYMBOL, captcha_text_div_text):

@@ -16,6 +16,10 @@ def is_arm() -> bool:
     return ret
 
 
+def get_python_version() -> str:
+    return platform.python_version()
+
+
 def get_curr_process_work_root_dir() -> pathlib.Path:
     """
     Returns the working root directory of the current process using pathlib.
