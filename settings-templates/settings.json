@@ -3,7 +3,7 @@
     "browser": "chrome",
     "language": "繁體中文",
     "application_timezone": "Asia/Taipei",
-    "ticket_number": 2,
+    "ticket_number": 1,
     "refresh_datetime": "",
     "ocr_captcha": {
         "enable": true,
